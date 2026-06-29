@@ -1,11 +1,14 @@
+
 function StatsCard({ title, value }) {
   return (
-    <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-lg transition hover:border-cyan-400 hover:shadow-cyan-500/10">
-      <p className="text-sm text-slate-400">{title}</p>
+    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6">
+      <h3 className="text-slate-400 text-lg">
+        {title}
+      </h3>
 
-      <h2 className="mt-3 text-4xl font-bold text-white">
+      <h1 className="text-5xl font-bold text-white mt-4">
         {value}
-      </h2>
+      </h1>
     </div>
   );
 }

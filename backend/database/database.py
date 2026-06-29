@@ -3,6 +3,45 @@ from database.connection import connection, cursor
 # ==========================================
 # Create Files Table
 # ==========================================
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS settings (
+
+    id INTEGER PRIMARY KEY,
+
+    scan_folder TEXT
+
+)
+""")
+
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS files (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    name TEXT,
+
+    path TEXT UNIQUE,
+
+    extension TEXT,
+
+    size INTEGER,
+
+    created_at TEXT,
+
+    modified_at TEXT,
+
+    hash TEXT,
+
+    indexed_at TEXT
+
+)
+""")
+from database.connection import connection, cursor
+
+# ==========================================
+# Create Files Table
+# ==========================================
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS document_content(
@@ -26,14 +65,6 @@ CREATE TABLE IF NOT EXISTS document_content(
 # Create Document Content Table
 # ==========================================
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS document_content (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    file_id INTEGER,
-    raw_text TEXT,
-    FOREIGN KEY(file_id) REFERENCES files(id)
-)
-""")
 
 # ==========================================
 # Create Embeddings Table

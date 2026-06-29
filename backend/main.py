@@ -1,15 +1,34 @@
 from fastapi import FastAPI
-from api.search_routes import router as search_router
+from fastapi.middleware.cors import CORSMiddleware
+
 from config import APP_NAME, APP_VERSION
-
 import database.database
-
+from api.settings_routes import router as settings_router
+from api.search_routes import router as search_router
 from api.scanner_routes import router as scanner_router
-
+from api.file_routes import router as file_router
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION
 )
+app.include_router(
+    settings_router,
+    prefix="/settings",
+    tags=["Settings"]
+)
+app.include_router(
+    file_router,
+    prefix="/files",
+    tags=["Files"]
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(search_router)
 
 app.include_router(

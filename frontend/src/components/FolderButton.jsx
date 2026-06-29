@@ -1,12 +1,64 @@
-import { FolderOpen } from "lucide-react";
+import { useState } from "react";
+import { scanFolder, getScanFolder } from "../services/api";
+import { Folder } from "lucide-react";
+function FolderButton({ onScanComplete }) {
+  const [loading, setLoading] = useState(false);
 
-function FolderButton() {
+const handleScan = async () => {
+  try {
+    setLoading(true);
+
+    // Settings me saved folder lo
+    const folderResponse = await getScanFolder();
+    const folderPath = folderResponse.data.folder;
+
+    if (!folderPath) {
+      alert("⚠ Please select a folder in Settings first.");
+      return;
+    }
+
+    // Scan start
+    const response = await scanFolder(folderPath);
+
+    console.log("Scanner Response:", response.data);
+
+    alert(`✅ Indexed ${response.data.files_indexed} files`);
+
+    // Home stats refresh
+    if (onScanComplete) {
+      onScanComplete();
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("❌ Scan Failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
     <button
-      className="mb-8 flex items-center gap-3 rounded-xl bg-cyan-500 px-6 py-4 font-semibold text-white transition hover:bg-cyan-600"
+      onClick={handleScan}
+      disabled={loading}
+      className="
+        flex
+        items-center
+        gap-3
+        bg-cyan-500
+        hover:bg-cyan-600
+        text-white
+        px-6
+        py-4
+        rounded-xl
+        font-semibold
+        transition
+        disabled:opacity-60
+      "
     >
-      <FolderOpen size={20} />
-      Select Folder
+      <Folder size={22} />
+
+      {loading ? "Scanning..." : "📂 Scan Folder"}
     </button>
   );
 }

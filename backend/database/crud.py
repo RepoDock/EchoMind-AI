@@ -1,6 +1,33 @@
 from database.connection import connection, cursor
 
+def get_recent_files():
 
+    cursor.execute("""
+        SELECT
+            id,
+            name,
+            path,
+            extension,
+            size,
+            modified_at
+        FROM files
+        ORDER BY modified_at DESC
+        LIMIT 10
+    """)
+
+    rows = cursor.fetchall()
+
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "path": row["path"],
+            "extension": row["extension"],
+            "size": row["size"],
+            "modified_at": row["modified_at"]
+        }
+        for row in rows
+    ]
 def insert_file(file_data):
 
     # Check if file already exists
@@ -78,3 +105,54 @@ def get_file_by_id(file_id):
         "path": row[2],
         "extension": row[3]
     }
+def get_all_files():
+
+    cursor.execute("""
+        SELECT
+            id,
+            name,
+            path,
+            extension,
+            size,
+            modified_at
+        FROM files
+        ORDER BY modified_at DESC
+    """)
+
+    rows = cursor.fetchall()
+
+    return [
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "path": row["path"],
+            "extension": row["extension"],
+            "size": row["size"],
+            "modified_at": row["modified_at"]
+        }
+        for row in rows
+    ]
+def save_scan_folder(folder):
+
+    cursor.execute("""
+        INSERT OR REPLACE INTO settings(id, scan_folder)
+        VALUES(1, ?)
+    """, (folder,))
+
+    connection.commit()
+
+
+def get_scan_folder():
+
+    cursor.execute("""
+        SELECT scan_folder
+        FROM settings
+        WHERE id=1
+    """)
+
+    row = cursor.fetchone()
+
+    if row:
+        return row["scan_folder"]
+
+    return ""
