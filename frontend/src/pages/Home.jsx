@@ -25,7 +25,9 @@ function Home() {
   };
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentQuery, setCurrentQuery] = useState("");
   const handleSearch = async (query) => {
+  setCurrentQuery(query);
 
   if (!query.trim()) {
     setSearchResults([]);
@@ -50,6 +52,21 @@ function Home() {
 
   }
 
+};
+const highlightText = (text) => {
+
+  if (!currentQuery) return text;
+  const escapedQuery = currentQuery.replace(
+  /[.*+?^${}()|[\]\\]/g,
+  "\\$&"
+  );
+
+  const regex = new RegExp(`(${escapedQuery})`, "gi");
+
+  return text.replace(
+    regex,
+    "<span class='text-cyan-400 font-bold'>$1</span>"
+  );
 };
   useEffect(() => {
     api
@@ -112,9 +129,12 @@ function Home() {
         <p className="text-cyan-400 mt-2">
           AI Match: {(file.score * 100).toFixed(1)}%
         </p>
-        <p className="text-slate-300 mt-2 italic">
-         {file.snippet}
-        </p>
+        <p className="text-slate-300 mt-2 italic"
+         dangerouslySetInnerHTML={{
+        __html: highlightText(file.snippet),
+        }}
+
+        />
 
       </div>
 

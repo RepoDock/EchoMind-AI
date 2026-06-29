@@ -4,6 +4,20 @@ import numpy as np
 from ai.embedding import generate_embedding
 from database.connection import cursor
 
+def keyword_score(query, text):
+
+    query_words = query.lower().split()
+
+    text = text.lower()
+
+    score = 0
+
+    for word in query_words:
+
+        if word in text:
+            score += 1
+
+    return score / max(len(query_words), 1)
 
 def cosine_similarity(a, b):
     a = np.array(a)
@@ -37,11 +51,22 @@ def search_documents(query, top_k=5):
         if len(embedding) == 0:
             continue
 
-        similarity = cosine_similarity(
-            query_embedding,
-            embedding
+        
+        semantic_score = cosine_similarity(
+        query_embedding,
+        embedding
         )
 
+        keyword_boost = keyword_score(
+            query,
+            chunk_text
+        )
+
+        similarity = (
+            semantic_score * 0.80
+            + keyword_boost * 0.20
+        )
+ 
         if (
             file_id not in best_scores
             or similarity > best_scores[file_id][0]
