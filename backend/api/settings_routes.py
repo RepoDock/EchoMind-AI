@@ -5,6 +5,8 @@ from database.crud import (
     save_scan_folder,
     get_scan_folder
 )
+from tkinter import Tk
+from tkinter.filedialog import askdirectory
 
 router = APIRouter()
 
@@ -33,4 +35,18 @@ def save(request: FolderRequest):
 
     return {
         "status": "saved"
+    }
+@router.get("/browse")
+def browse_folder():
+
+    root = Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+
+    folder = askdirectory()
+
+    root.destroy()
+
+    return {
+        "folder": folder
     }

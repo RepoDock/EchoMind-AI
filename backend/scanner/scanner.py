@@ -3,6 +3,15 @@ from datetime import datetime
 
 from config import SUPPORTED_EXTENSIONS
 
+IGNORE_FOLDERS = {
+    "venv",
+    ".venv",
+    "node_modules",
+    "__pycache__",
+    ".git",
+    "site-packages",
+}
+
 
 def scan_folder(folder_path: str):
     folder = Path(folder_path)
@@ -14,19 +23,23 @@ def scan_folder(folder_path: str):
 
     for file in folder.rglob("*"):
 
-        if file.is_file():
+        # Ignore unwanted folders
+        if any(part in IGNORE_FOLDERS for part in file.parts):
+            continue
 
-            if file.suffix.lower() in SUPPORTED_EXTENSIONS:
+        if file.is_file() and file.suffix.lower() in SUPPORTED_EXTENSIONS:
+            if file.name.startswith("~"):
+                continue
 
-                metadata = {
-                    "name": file.name,
-                    "path": str(file),
-                    "extension": file.suffix.lower(),
-                    "size": file.stat().st_size,
-                    "created_at": datetime.fromtimestamp(file.stat().st_ctime),
-                    "modified_at": datetime.fromtimestamp(file.stat().st_mtime)
-                }
+            metadata = {
+                "name": file.name,
+                "path": str(file),
+                "extension": file.suffix.lower(),
+                "size": file.stat().st_size,
+                "created_at": datetime.fromtimestamp(file.stat().st_ctime),
+                "modified_at": datetime.fromtimestamp(file.stat().st_mtime),
+            }
 
-                files.append(metadata)
+            files.append(metadata)
 
     return files

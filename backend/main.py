@@ -7,9 +7,15 @@ from api.settings_routes import router as settings_router
 from api.search_routes import router as search_router
 from api.scanner_routes import router as scanner_router
 from api.file_routes import router as file_router
+from api.ai_routes import router as ai_router
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION
+)
+app.include_router(
+    ai_router,
+    prefix="/ai",
+    tags=["AI"]
 )
 app.include_router(
     settings_router,

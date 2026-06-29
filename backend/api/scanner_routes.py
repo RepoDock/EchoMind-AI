@@ -1,8 +1,18 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-
+import os
+import json
+from ai.chunker import chunk_text
 from scanner.scanner import scan_folder
-from database.crud import insert_file
+
+from ai.extractor import extract_text
+from ai.embedding import generate_embedding
+
+from database.connection import cursor
+from database.crud import (
+    insert_file,
+    insert_document_content,
+)
 
 router = APIRouter()
 
@@ -10,22 +20,48 @@ router = APIRouter()
 class ScanRequest(BaseModel):
     folder_path: str
 
-
 @router.post("/scan")
 def scan(request: ScanRequest):
 
     files = scan_folder(request.folder_path)
 
     for file in files:
-        insert_file(file)
+
+        file_id = insert_file(file)
+
+        text = extract_text(file["path"])
+
+        if not text.strip():
+            print(f"⚠ No text found in {file['name']}")
+            continue
+
+        chunks = chunk_text(text)
+
+        print(f"📄 {file['name']} -> {len(chunks)} chunks")
+        for index, chunk in enumerate(chunks):
+
+            if not chunk.strip():
+                continue
+
+            embedding = generate_embedding(chunk)
+
+            if not embedding:
+                continue
+
+            insert_document_content(
+                file_id,
+                index,
+                chunk,
+                json.dumps(embedding)
+            )
+        
+
+        print(f"✅ Indexed {len(chunks)} chunks")
 
     return {
         "status": "success",
         "files_indexed": len(files)
     }
-import os
-from database.connection import cursor
-
 @router.get("/stats")
 def get_stats():
 
@@ -41,19 +77,3 @@ def get_stats():
         "folders": folders,
         "indexed": 100
     }
-# from database.connection import cursor
-
-# @router.get("/stats")
-# def get_stats():
-
-#     cursor.execute("SELECT COUNT(*) FROM files")
-#     files = cursor.fetchone()[0]
-
-#     cursor.execute("SELECT COUNT(DISTINCT path) FROM files")
-#     folders = cursor.fetchone()[0]
-
-#     return {
-#         "files": files,
-#         "folders": folders,
-#         "indexed": 100
-#     }

@@ -38,28 +38,64 @@ const handleScan = async () => {
 };
 
   return (
-    <button
-      onClick={handleScan}
-      disabled={loading}
-      className="
-        flex
-        items-center
-        gap-3
-        bg-cyan-500
-        hover:bg-cyan-600
-        text-white
-        px-6
-        py-4
-        rounded-xl
-        font-semibold
-        transition
-        disabled:opacity-60
-      "
-    >
-      <Folder size={22} />
+    <>
+  <button
+    onClick={handleScan}
+    disabled={loading}
+    className="
+      flex
+      items-center
+      gap-3
+      bg-cyan-500
+      hover:bg-cyan-600
+      text-white
+      px-6
+      py-4
+      rounded-xl
+      font-semibold
+      transition
+      disabled:opacity-60
+    "
+  >
+    <Folder size={22} />
 
-      {loading ? "Scanning..." : "📂 Scan Folder"}
-    </button>
+    {loading ? "Scanning..." : "📂 Scan Folder"}
+  </button>
+
+  {loading && (
+    <div className="mt-4 bg-slate-900 border border-slate-700 rounded-xl p-4">
+      <p className="text-cyan-400 font-semibold animate-pulse">
+        🔄 AI is indexing your files...
+      </p>
+
+      <p className="text-slate-400 mt-2">
+        Please wait while EchoMind extracts text and creates embeddings.
+      </p>
+    </div>
+  )}
+</>
+    // <button
+    //   onClick={handleScan}
+    //   disabled={loading}
+    //   className="
+    //     flex
+    //     items-center
+    //     gap-3
+    //     bg-cyan-500
+    //     hover:bg-cyan-600
+    //     text-white
+    //     px-6
+    //     py-4
+    //     rounded-xl
+    //     font-semibold
+    //     transition
+    //     disabled:opacity-60
+    //   "
+    // >
+    //   <Folder size={22} />
+
+    //   {loading ? "Scanning..." : "📂 Scan Folder"}
+    // </button>
   );
 }
 

@@ -42,19 +42,18 @@ from database.connection import connection, cursor
 # ==========================================
 # Create Files Table
 # ==========================================
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS document_content(
 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    file_id INTEGER UNIQUE,
+    file_id INTEGER,
 
-    raw_text TEXT,
+    chunk_index INTEGER,
 
-    pages INTEGER,
+    chunk_text TEXT,
 
-    title TEXT,
+    embedding TEXT,
 
     FOREIGN KEY(file_id) REFERENCES files(id)
 

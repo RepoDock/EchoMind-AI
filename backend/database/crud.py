@@ -156,3 +156,29 @@ def get_scan_folder():
         return row["scan_folder"]
 
     return ""
+
+def insert_document_content(file_id, chunk_index, chunk_text, embedding):
+
+    cursor.execute(
+        """
+        INSERT INTO document_content
+        (
+            file_id,
+            chunk_index,
+            chunk_text,
+            embedding
+        )
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            file_id,
+            chunk_index,
+            chunk_text,
+            embedding
+        )
+    )
+
+    
+
+    connection.commit()
+    connection.commit()

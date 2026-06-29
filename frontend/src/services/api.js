@@ -1,17 +1,4 @@
-// import axios from "axios";
 
-// const api = axios.create({
-//   baseURL: "http://127.0.0.1:8000",
-// });
-
-// export default api;
-// import axios from "axios";
-
-// const api = axios.create({
-//   baseURL: "http://localhost:8000",
-// });
-
-// export default api;
 import axios from "axios";
 
 const api = axios.create({
@@ -34,11 +21,17 @@ export const openFile = (path) => {
     path,
   });
 };
-
+export const aiSearch = (query) =>
+  api.post("/ai/search", {
+    query,
+  });
 export const showInFolder = (path) => {
   return api.post("/files/show", {
     path,
   });
+};
+export const browseFolder = () => {
+  return api.get("/settings/browse");
 };
 export const getRecentFiles = () => {
   return api.get("/recent");

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { getFolder, saveFolder } from "../services/api";
 
+import {
+  getFolder,
+  saveFolder,
+  browseFolder,
+} from "../services/api";
 function Settings() {
   const [folder, setFolder] = useState("");
 
@@ -13,23 +17,32 @@ function Settings() {
       .catch(console.error);
   }, []);
 
-  const handleFolder = async () => {
-    const newFolder = prompt("Enter Folder Path", folder);
+
+const handleFolder = async () => {
+
+  try {
+
+    const response = await browseFolder();
+
+    const newFolder = response.data.folder;
 
     if (!newFolder) return;
 
-    try {
-      await saveFolder(newFolder);
+    await saveFolder(newFolder);
 
-      setFolder(newFolder);
+    setFolder(newFolder);
 
-      alert("✅ Folder Saved Successfully");
-    } catch (err) {
-      console.error(err);
-      alert("❌ Failed to Save Folder");
-    }
-  };
+    alert("✅ Folder Saved Successfully");
 
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Failed to Save Folder");
+
+  }
+
+};
   return (
     <div className="min-h-screen bg-slate-950 flex">
       <Sidebar />

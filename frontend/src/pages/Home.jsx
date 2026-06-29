@@ -5,8 +5,7 @@ import FolderButton from "../components/FolderButton";
 import StatsCard from "../components/StatsCard";
 import RecentFiles from "../components/RecentFiles";
 import { useEffect, useState } from "react";
-import api, { getStats } from "../services/api";
-
+import api, { getStats, aiSearch } from "../services/api";
 function Home() {
   const [stats, setStats] = useState({
     files: 0,
@@ -24,7 +23,34 @@ function Home() {
         console.error("Stats Error:", error);
       });
   };
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const handleSearch = async (query) => {
 
+  if (!query.trim()) {
+    setSearchResults([]);
+    return;
+  }
+
+  try {
+
+    setIsSearching(true);
+
+    const response = await aiSearch(query);
+
+    setSearchResults(response.data);
+
+  } catch (error) {
+
+    console.error(error);
+
+  } finally {
+
+    setIsSearching(false);
+
+  }
+
+};
   useEffect(() => {
     api
       .get("/")
@@ -47,7 +73,8 @@ function Home() {
       <main className="flex-1 p-10">
         <Header />
 
-        <SearchBar />
+        <SearchBar onSearch={handleSearch} />
+        
 
         <FolderButton onScanComplete={loadStats} />
 
@@ -57,7 +84,49 @@ function Home() {
           <StatsCard title="Indexed" value={`${stats.indexed}%`} />
         </div>
 
-        <RecentFiles />
+        {isSearching ? (
+
+  <p className="text-white">
+    Searching...
+  </p>
+
+) : searchResults.length > 0 ? (
+
+  <div className="space-y-4">
+
+    {searchResults.map((file) => (
+
+      <div
+        key={file.id}
+        className="bg-slate-900 border border-slate-700 rounded-xl p-5"
+      >
+
+        <h2 className="text-xl font-bold text-white">
+          📄 {file.name}
+        </h2>
+
+        <p className="text-slate-400 break-all">
+          {file.path}
+        </p>
+
+        <p className="text-cyan-400 mt-2">
+          AI Match: {(file.score * 100).toFixed(1)}%
+        </p>
+        <p className="text-slate-300 mt-2 italic">
+         {file.snippet}
+        </p>
+
+      </div>
+
+    ))}
+
+  </div>
+
+) : (
+
+  <RecentFiles />
+
+)}
       </main>
     </div>
   );
