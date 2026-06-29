@@ -22,3 +22,22 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Sample files
+backend/sample-data/
+
+# Test files
+backend/test_*.py
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+backend/storage/database.db
+
+# FAISS
+backend/storage/faiss.index
+backend/storage/faiss_mapping.json
+
+# Ollama cache (if created locally)
+.ollama/

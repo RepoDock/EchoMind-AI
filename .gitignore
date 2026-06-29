@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Node
 node_modules/
 dist/
@@ -13,13 +14,41 @@ __pycache__/
 # IDE
 .vscode/
 .idea/
+=======
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+backend/venv/
+
+# Database
+*.db
+
+# Environment variables
+.env
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+>>>>>>> 618156a (Phase 1: Backend foundation with scanner API)
 
 # Logs
 *.log
 
+<<<<<<< HEAD
 # OS
 .DS_Store
 Thumbs.db
 
 # Storage
 storage/
+=======
+# Build
+dist/
+build/
+>>>>>>> 618156a (Phase 1: Backend foundation with scanner API)

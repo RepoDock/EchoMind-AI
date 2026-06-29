@@ -1,0 +1,80 @@
+from database.connection import connection, cursor
+
+
+def insert_file(file_data):
+
+    # Check if file already exists
+    cursor.execute(
+        """
+        SELECT id
+        FROM files
+        WHERE path = ?
+        """,
+        (file_data["path"],)
+    )
+
+    row = cursor.fetchone()
+
+    # If file already exists, return its ID
+    if row is not None:
+        return row[0]
+
+    # Otherwise insert new file
+    cursor.execute(
+        """
+        INSERT INTO files
+        (
+            name,
+            path,
+            extension,
+            size,
+            created_at,
+            modified_at,
+            hash,
+            indexed_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            file_data["name"],
+            file_data["path"],
+            file_data["extension"],
+            file_data["size"],
+            str(file_data["created_at"]),
+            str(file_data["modified_at"]),
+            None,
+            None
+        )
+    )
+
+    connection.commit()
+
+    return cursor.lastrowid
+
+
+def get_file_by_id(file_id):
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            name,
+            path,
+            extension
+        FROM files
+        WHERE id = ?
+        """,
+        (file_id,)
+    )
+
+    row = cursor.fetchone()
+
+    if row is None:
+        return None
+
+    return {
+        "id": row[0],
+        "name": row[1],
+        "path": row[2],
+        "extension": row[3]
+    }
