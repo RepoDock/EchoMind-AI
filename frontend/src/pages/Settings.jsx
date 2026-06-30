@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useTheme } from "../theme/ThemeContext";
 import { themes } from "../theme/themes";
+import ConfirmModal from "../components/ui/ConfirmModal";
+import { useToast } from "../context/ToastContext";
 import {
   getFolder,
   saveFolder,
@@ -9,8 +11,11 @@ import {
   clearData,
 } from "../services/api";
 function Settings() {
+  const [showClearChatModal, setShowClearChatModal] = useState(false);
+  const [showClearDataModal, setShowClearDataModal] = useState(false);
   const [folder, setFolder] = useState("");
   const { theme, setTheme } = useTheme();
+  const { showToast } = useToast();
   useEffect(() => {
     getFolder()
       .then((response) => {
@@ -18,7 +23,6 @@ function Settings() {
       })
       .catch(console.error);
   }, []);
-
 
 const handleFolder = async () => {
 
@@ -34,36 +38,31 @@ const handleFolder = async () => {
 
     setFolder(newFolder);
 
-    alert("✅ Folder Saved Successfully");
+    showToast("Folder Saved Successfully");
 
   } catch (err) {
 
     console.error(err);
 
-    alert("❌ Failed to Save Folder");
+
+    showToast("Failed to Save Folder", "error");
 
   }
 
 };
 const handleClearData = async () => {
 
-  const confirmClear = window.confirm(
-    "Delete all indexed documents and app data?"
-  );
-
-  if (!confirmClear) return;
-
   try {
 
     await clearData();
 
-    alert("✅ App data cleared.");
+    showToast("App Data Cleared Successfully");
 
   } catch (err) {
 
     console.error(err);
-
-    alert("❌ Failed to clear app data.");
+    showToast("Failed to clear data", "error");
+    
 
   }
 
@@ -148,22 +147,16 @@ const handleClearData = async () => {
   <div className="flex gap-4 flex-wrap">
 
     <button
-      onClick={() => {
-        if (
-          window.confirm("Delete all AI chat history?")
-        ) {
-          localStorage.removeItem("echomind_chats");
-
-          alert("✅ Chat history deleted.");
-        }
-      }}
+      onClick={() => 
+        setShowClearChatModal(true)
+      }
       className="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-lg"
     >
       Clear Chat History
     </button>
 
     <button
-      onClick={handleClearData}
+      onClick={() => setShowClearDataModal(true)}
       className="bg-orange-500 hover:bg-orange-600 px-5 py-3 rounded-lg"
     >
       Clear App Data
@@ -193,6 +186,40 @@ const handleClearData = async () => {
         </div>
 
       </main>
+      <ConfirmModal
+            open={showClearChatModal}
+            title="Delete Chat History"
+            message="This will permanently delete all AI chat history."
+            confirmText="Delete"
+            onCancel={() => setShowClearChatModal(false)}
+            onConfirm={() => {
+
+              localStorage.removeItem("echomind_chats");
+
+              setShowClearChatModal(false);
+              showToast("Chat Cleared");
+              
+
+              
+
+            }}
+          />
+
+          <ConfirmModal
+            open={showClearDataModal}
+            title="Clear App Data"
+            message="This will permanently delete indexed documents, embeddings and search history."
+            confirmText="Clear"
+            onCancel={() => setShowClearDataModal(false)}
+            onConfirm={async () => {
+
+              await handleClearData();
+
+              setShowClearDataModal(false);
+
+            }}
+          />
+          
     </div>
   );
 }

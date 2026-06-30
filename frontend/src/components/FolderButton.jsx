@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { scanFolder, getScanFolder } from "../services/api";
 import { Folder } from "lucide-react";
+import { useToast } from "../context/ToastContext";
 function FolderButton({ onScanComplete }) {
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
 const handleScan = async () => {
   try {
@@ -12,8 +14,9 @@ const handleScan = async () => {
     const folderResponse = await getScanFolder();
     const folderPath = folderResponse.data.folder;
 
+
     if (!folderPath) {
-      alert("⚠ Please select a folder in Settings first.");
+      showToast("Please select a folder in Settings first.", "error");
       return;
     }
 
@@ -22,7 +25,9 @@ const handleScan = async () => {
 
     console.log("Scanner Response:", response.data);
 
-    alert(`✅ Indexed ${response.data.files_indexed} files`);
+    showToast(
+      `Indexed ${response.data.files_indexed} files`
+    );
 
     // Home stats refresh
     if (onScanComplete) {
@@ -31,7 +36,7 @@ const handleScan = async () => {
 
   } catch (error) {
     console.error(error);
-    alert("❌ Scan Failed");
+    showToast("Scan Failed", "error");
   } finally {
     setLoading(false);
   }

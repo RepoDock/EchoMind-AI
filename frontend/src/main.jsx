@@ -4,11 +4,13 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import { ThemeProvider } from "./theme/ThemeContext";
-
+import { ToastProvider } from "./context/ToastContext";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ThemeProvider>
+  <ThemeProvider>
+    <ToastProvider>
       <App />
-    </ThemeProvider>
-  </StrictMode>
+    </ToastProvider>
+  </ThemeProvider>
+</StrictMode>
 );
