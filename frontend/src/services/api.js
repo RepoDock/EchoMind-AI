@@ -25,6 +25,15 @@ export const aiSearch = (query) =>
   api.post("/ai/search", {
     query,
   });
+export const chatWithAI = (question, history, mode) =>
+  api.post("/chat/chat", {
+    question,
+    history,
+    mode,
+  });
+export const clearData = () =>
+  api.post("/scanner/clear-data");
+
 export const showInFolder = (path) => {
   return api.post("/files/show", {
     path,

@@ -63,12 +63,12 @@ const handleScan = async () => {
   </button>
 
   {loading && (
-    <div className="mt-4 bg-slate-900 border border-slate-700 rounded-xl p-4">
+    <div className="mt-4 card-bg rounded-xl p-4">
       <p className="text-cyan-400 font-semibold animate-pulse">
         🔄 AI is indexing your files...
       </p>
 
-      <p className="text-slate-400 mt-2">
+      <p className="text-theme opacity-70 mt-2">
         Please wait while EchoMind extracts text and creates embeddings.
       </p>
     </div>

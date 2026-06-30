@@ -58,10 +58,10 @@ function Documents() {
 
   return (
 
-        <div className="min-h-screen bg-slate-950 flex overflow-hidden">
+        <div className="min-h-screen app-bg flex overflow-hidden">
       <Sidebar />
 
-        <main className="flex-1 min-w-0 p-10 text-white overflow-x-hidden">
+        <main className="flex-1 min-w-0 p-10 text-theme overflow-x-hidden">
 
         <h1 className="text-4xl font-bold mb-8">
           Documents
@@ -75,14 +75,14 @@ function Documents() {
       placeholder="🔍 Search documents..."
       value={search}
       onChange={(e) => setSearch(e.target.value)}
-      className="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 outline-none focus:border-cyan-400"
+      className="w-full card-bg rounded-xl p-4 outline-none focus:border-cyan-400"
     />
   </div>
 
   <select
     value={sortBy}
     onChange={(e) => setSortBy(e.target.value)}
-    className="w-52 flex-shrink-0 bg-slate-900 border border-slate-700 rounded-xl p-4 text-white"
+    className="w-52 flex-shrink-0 card-bg rounded-xl p-4 text-theme"
   >
     <option value="name-asc">📄 Name (A-Z)</option>
     <option value="name-desc">📄 Name (Z-A)</option>
@@ -96,7 +96,7 @@ function Documents() {
 
 </div>
 
-        <p className="text-slate-400 mb-6">
+        <p className="text-theme opacity-70 mb-6">
           {filteredFiles.length} Documents Found
         </p>
 
@@ -105,18 +105,18 @@ function Documents() {
           {filteredFiles.map((file) => (
             <div
               key={file.id}
-              className="bg-slate-900 border border-slate-700 rounded-xl p-6 hover:border-cyan-400 transition-all"
+              className="card-bg rounded-xl p-6 hover:border-cyan-400 transition-all"
             >
               <h2 className="text-2xl font-semibold">
                 📄 {file.name}
               </h2>
 
               
-              <p className="text-slate-400 mt-2 break-words overflow-hidden">
+             <p className="text-theme opacity-70 mt-2 break-words overflow-hidden">
                 {file.path}
             </p>
 
-              <div className="flex gap-8 mt-4 text-slate-300">
+              <div className="flex gap-8 mt-4 text-theme opacity-80">
                 <span>
                   <strong>Type:</strong> {file.extension}
                 </span>

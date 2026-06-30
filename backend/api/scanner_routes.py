@@ -4,7 +4,7 @@ import os
 import json
 from ai.chunker import chunk_text
 from scanner.scanner import scan_folder
-
+from database.connection import connection, cursor
 from ai.extractor import extract_text
 from ai.embedding import generate_embedding
 
@@ -76,4 +76,18 @@ def get_stats():
         "files": files,
         "folders": folders,
         "indexed": 100
+    }
+@router.post("/clear-data")
+def clear_data():
+
+    cursor.execute("DELETE FROM document_content")
+    cursor.execute("DELETE FROM embeddings")
+    cursor.execute("DELETE FROM search_history")
+    cursor.execute("DELETE FROM files")
+
+    connection.commit()
+
+    return {
+        "success": True,
+        "message": "All indexed data cleared."
     }

@@ -84,7 +84,7 @@ const highlightText = (text) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
+    <div className="min-h-screen app-bg flex">
       <Sidebar />
 
       <main className="flex-1 p-10">
@@ -103,7 +103,7 @@ const highlightText = (text) => {
 
         {isSearching ? (
 
-  <p className="text-white">
+  <p className="text-theme">
     Searching...
   </p>
 
@@ -115,21 +115,21 @@ const highlightText = (text) => {
 
       <div
         key={file.id}
-        className="bg-slate-900 border border-slate-700 rounded-xl p-5"
+        className="card-bg rounded-xl p-5"
       >
 
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-theme">
           📄 {file.name}
         </h2>
 
-        <p className="text-slate-400 break-all">
+        <p className="text-theme opacity-70 break-all">
           {file.path}
         </p>
 
         <p className="text-cyan-400 mt-2">
           AI Match: {(file.score * 100).toFixed(1)}%
         </p>
-        <p className="text-slate-300 mt-2 italic"
+        <p className="text-theme opacity-80 mt-2 italic"
          dangerouslySetInnerHTML={{
         __html: highlightText(file.snippet),
         }}

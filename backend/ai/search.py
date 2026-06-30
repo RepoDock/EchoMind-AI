@@ -27,34 +27,38 @@ def cosine_similarity(a, b):
         np.linalg.norm(a) * np.linalg.norm(b)
     )
 
-
-def search_documents(query, top_k=5):
+def search_documents(query, top_k=8):
 
     query_embedding = generate_embedding(query)
 
     cursor.execute("""
-        SELECT
-            file_id,
-            chunk_text,
-            embedding
-        FROM document_content
-        WHERE embedding IS NOT NULL
+    SELECT
+        dc.file_id,
+        dc.chunk_text,
+        dc.embedding,
+        f.name
+    FROM document_content dc
+    JOIN files f
+        ON dc.file_id = f.id
+    WHERE dc.embedding IS NOT NULL
     """)
 
     rows = cursor.fetchall()
 
-    best_scores = {}
+    results = []
 
-    for file_id, chunk_text, embedding_json in rows:
+    MIN_SCORE = 0.25
+
+    for file_id, chunk_text, embedding_json, file_name in rows:
 
         embedding = json.loads(embedding_json)
+
         if len(embedding) == 0:
             continue
 
-        
         semantic_score = cosine_similarity(
-        query_embedding,
-        embedding
+            query_embedding,
+            embedding
         )
 
         keyword_boost = keyword_score(
@@ -66,25 +70,16 @@ def search_documents(query, top_k=5):
             semantic_score * 0.80
             + keyword_boost * 0.20
         )
- 
-        if (
-            file_id not in best_scores
-            or similarity > best_scores[file_id][0]
-        ):
-            best_scores[file_id] = (
-                similarity,
-                chunk_text
-            )
 
-    results = []
-
-    for file_id, (score, chunk) in best_scores.items():
+        if similarity < MIN_SCORE:
+            continue
 
         results.append(
             (
                 file_id,
-                score,
-                chunk
+                similarity,
+                chunk_text,
+                file_name
             )
         )
 
@@ -92,5 +87,10 @@ def search_documents(query, top_k=5):
         key=lambda x: x[1],
         reverse=True
     )
+    print("\n======================")
 
+    for r in results:
+        print(r[3], "->", round(r[1], 3))
+
+    print("======================\n")
     return results[:top_k]

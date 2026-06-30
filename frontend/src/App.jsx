@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import Documents from "./pages/Documents";
 import Recent from "./pages/Recents";
 import Settings from "./pages/Settings";
-
+import AIChat from "./pages/AIChat";
 function App() {
   return (
     <BrowserRouter>
@@ -13,6 +13,7 @@ function App() {
         <Route path="/documents" element={<Documents />} />
         <Route path="/recent" element={<Recent />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/ai-chat" element={<AIChat />} />
       </Routes>
     </BrowserRouter>
   );

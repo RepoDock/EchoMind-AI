@@ -30,16 +30,16 @@ function Recent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
+    <div className="min-h-screen app-bg flex">
       <Sidebar />
 
-      <main className="flex-1 p-10 text-white">
+      <main className="flex-1 p-10 text-theme">
 
         <h1 className="text-4xl font-bold mb-3">
           Recent Files
         </h1>
 
-        <p className="text-slate-400 mb-8">
+        <p className="text-theme opacity-70 mb-8">
           Last 10 indexed documents
         </p>
 
@@ -48,17 +48,17 @@ function Recent() {
           {files.map((file) => (
             <div
               key={file.id}
-              className="bg-slate-900 border border-slate-700 rounded-xl p-6 hover:border-cyan-400 transition"
+              className="card-bg rounded-xl p-6 transition hover:border-cyan-400"
             >
               <h2 className="text-2xl font-semibold">
                 📄 {file.name}
               </h2>
 
-              <p className="text-slate-400 mt-2 break-all">
+              <p className="text-theme opacity-70 mt-2 break-all">
                 {file.path}
               </p>
 
-              <div className="flex gap-8 mt-4 text-slate-300">
+              <div className="flex gap-8 mt-4 text-theme opacity-80">
                 <span>
                   <strong>Type:</strong> {file.extension}
                 </span>

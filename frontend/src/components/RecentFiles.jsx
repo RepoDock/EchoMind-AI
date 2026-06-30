@@ -8,8 +8,8 @@ function RecentFiles() {
   ];
 
   return (
-    <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-lg">
-      <h2 className="mb-5 text-xl font-semibold text-white">
+    <div className="card-bg rounded-2xl p-6 shadow-lg">
+      <h2 className="mb-5 text-xl font-semibold text-theme">
         Recent Files
       </h2>
 
@@ -17,11 +17,11 @@ function RecentFiles() {
         {files.map((file, index) => (
           <div
             key={index}
-            className="flex items-center gap-3 rounded-xl border border-slate-700 p-4 transition hover:border-cyan-400 hover:bg-slate-800"
+            className="flex items-center gap-3 rounded-xl border-theme p-4 transition hover:border-cyan-400 hover:opacity-80"
           >
             <FileText size={20} className="text-cyan-400" />
 
-            <span className="text-slate-200">
+            <span className="text-theme">
               {file}
             </span>
           </div>
