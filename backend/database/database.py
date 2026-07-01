@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS files (
 # ==========================================
 # Create Document Content Table
 # ==========================================
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS document_content (
 
@@ -57,6 +56,22 @@ CREATE TABLE IF NOT EXISTS document_content (
     pages INTEGER,
 
     title TEXT,
+
+    subject TEXT,
+
+    course TEXT,
+
+    semester TEXT,
+
+    unit TEXT,
+
+    chapter TEXT,
+
+    language TEXT,
+
+    document_type TEXT,
+
+    keywords TEXT,
 
     FOREIGN KEY(file_id) REFERENCES files(id)
 
@@ -78,6 +93,33 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     FOREIGN KEY(file_id) REFERENCES files(id)
 )
 """)
+
+connection.commit()
+# ==========================================
+# Update document_content table (Migration)
+# ==========================================
+
+columns = [
+    ("subject", "TEXT"),
+    ("course", "TEXT"),
+    ("semester", "TEXT"),
+    ("unit", "TEXT"),
+    ("chapter", "TEXT"),
+    ("language", "TEXT"),
+    ("document_type", "TEXT"),
+    ("keywords", "TEXT")
+]
+
+for column, datatype in columns:
+    try:
+        cursor.execute(
+            f"""
+            ALTER TABLE document_content
+            ADD COLUMN {column} {datatype}
+            """
+        )
+    except:
+        pass
 
 connection.commit()
 # ==========================================

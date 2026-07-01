@@ -16,7 +16,7 @@ def ai_search(request: SearchRequest):
 
     results = search_documents(request.query)
 
-    response = []
+    best_results = {}
 
     query = request.query.lower()
 
@@ -54,13 +54,24 @@ def ai_search(request: SearchRequest):
 
             snippet = chunk[:180] + "..."
 
-        response.append({
+        current = {
             "id": file_id,
             "name": file[0],
             "path": file[1],
             "extension": file[2],
             "score": round(score, 4),
             "snippet": snippet
-        })
+        }
 
-    return response
+        if (
+            file_id not in best_results
+            or
+            current["score"] > best_results[file_id]["score"]
+        ):
+            best_results[file_id] = current
+
+    return sorted(
+        best_results.values(),
+        key=lambda x: x["score"],
+        reverse=True
+    )

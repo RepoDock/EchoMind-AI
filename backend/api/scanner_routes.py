@@ -7,7 +7,7 @@ from scanner.scanner import scan_folder
 from database.connection import connection, cursor
 from ai.extractor import extract_text
 from ai.embedding import generate_embedding
-
+from ai.metadata_extractor import extract_metadata
 from database.connection import cursor
 from database.crud import (
     insert_file,
@@ -28,6 +28,13 @@ class ScanRequest(BaseModel):
 def scan(request: ScanRequest):
 
     files = scan_folder(request.folder_path)
+    print("=" * 60)
+    print("Detected Files:", len(files))
+
+    for file in files:
+        print(file["name"])
+
+    print("=" * 60)
 
     for file in files:
 
@@ -36,11 +43,23 @@ def scan(request: ScanRequest):
         document = extract_text(file["path"])
 
         if document is None:
+            print(f"❌ Failed to read: {file['name']}")
             continue
 
         if not document["text"].strip():
             print(f"⚠ No text found in {file['name']}")
             continue
+
+        # -------------------------
+        # Extract Metadata
+        # -------------------------
+        metadata = extract_metadata(
+            document["text"],
+            file["name"]
+        )
+
+        document.update(metadata)
+
         insert_document_content(
             file_id,
             document
@@ -100,6 +119,7 @@ def clear_data():
     cursor.execute("DELETE FROM embeddings")
     cursor.execute("DELETE FROM search_history")
     cursor.execute("DELETE FROM files")
+    cursor.execute("DELETE FROM document_chunks")
 
     connection.commit()
 

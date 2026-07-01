@@ -317,18 +317,7 @@ def ask_llm(
     mode="learn",
     file_id=None
 ):
-    # print("✅ Extraction query detected")
 
-    # search_context = ""
-
-    # for _, score, chunk, file_name, page_number in results:
-    #     search_context += chunk + "\n"
-
-    # print(search_context)
-
-    # value = extract_exact_value(question, search_context)
-
-    # print("Extracted Value:", value)
     if history is None:
         history = []
 
@@ -338,6 +327,8 @@ def ask_llm(
     if file_id is None:
 
         results = search_documents(question, top_k=5)
+
+
 
         if not results:
             return {
@@ -407,6 +398,13 @@ def ask_llm(
                 question,
                 top_k=5
             )
+            print("=" * 60)
+            for _, score, chunk, file_name, page_number in results:
+                print(page_number, score)
+                print(chunk[:250])
+                print("-" * 40)
+
+            print("=" * 60)
 
             if not results:
                 return {
@@ -471,6 +469,8 @@ def ask_llm(
                         }]
                     }
 
+            seen_sources = set()
+
             for _, score, chunk, file_name, page_number in results:
 
                 context += f"""
@@ -480,11 +480,16 @@ def ask_llm(
 
                 """
 
-                if file_name not in sources:
+                source_key = (file_name, page_number)
+
+                if source_key not in seen_sources:
+
                     sources.append({
-                    "file": file_name,
-                    "page": page_number
-                })
+                        "file": file_name,
+                        "page": page_number
+                    })
+
+                    seen_sources.add(source_key)
     language = detect_language(question)
     if language == "english":
 

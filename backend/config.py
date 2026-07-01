@@ -37,5 +37,6 @@ SUPPORTED_EXTENSIONS = [
     ".pdf",
     ".docx",
     ".pptx",
-    ".txt"
+    ".txt",
+    ".ppt"
 ]

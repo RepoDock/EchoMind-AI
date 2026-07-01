@@ -5,8 +5,14 @@ import FolderButton from "../components/FolderButton";
 import StatsCard from "../components/StatsCard";
 import RecentFiles from "../components/RecentFiles";
 import { useEffect, useState } from "react";
-import api, { getStats, aiSearch } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import api, {
+  getStats,
+  aiSearch,
+  openFile,
+} from "../services/api";
 function Home() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     files: 0,
     folders: 0,
@@ -107,9 +113,19 @@ const highlightText = (text) => {
     Searching...
   </p>
 
-) : searchResults.length > 0 ? (
+) : currentQuery.trim() ? (
 
-  <div className="space-y-4">
+  <>
+    <p className="text-theme opacity-70 mb-4">
+      {searchResults.length === 0
+        ? "No files found"
+        : `${searchResults.length} file${
+            searchResults.length > 1 ? "s" : ""
+          } found`}
+    </p>
+
+    {searchResults.length > 0 && (
+      <div className="space-y-4">
 
     {searchResults.map((file) => (
 
@@ -135,12 +151,31 @@ const highlightText = (text) => {
         }}
 
         />
+        <div className="flex gap-3 mt-5">
+
+          <button
+            onClick={() => openFile(file.path)}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            📂 Open
+          </button>
+          <button
+              onClick={() => navigate(`/document-ai/${file.id}`)}
+              className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg transition"
+          >
+              🤖 Ask AI
+          </button>
+
+        </div>
+        
 
       </div>
 
-    ))}
+            ))}
+      </div>
+    )}
 
-  </div>
+  </>
 
 ) : (
 

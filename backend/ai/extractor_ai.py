@@ -34,8 +34,27 @@ def is_extraction_query(query):
 
     query = query.lower()
 
-    return any(keyword in query for keyword in EXTRACTION_KEYWORDS)
+    extraction_words = [
+        "extract",
+        "show",
+        "find",
+        "give",
+        "tell",
+        "display",
+        "what is my",
+        "what's my",
+        "what is the",
+        "what's the",
+    ]
 
+    if not any(word in query for word in extraction_words):
+        return False
+
+    return any(
+        alias.lower() in query
+        for aliases in FIELD_ALIASES.values()
+        for alias in aliases
+    )
 def extract_exact_value(question, context):
 
     question = question.lower()

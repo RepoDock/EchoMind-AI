@@ -80,7 +80,7 @@ VEHICLE_FIELDS = {
         "company"
     ],
 
-    "model": [
+    "vehicle": [
         "model",
         "vehicle model",
         "model name",

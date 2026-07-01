@@ -72,7 +72,10 @@ def extract_all_fields(context):
         # ------------------------
         if value is None:
 
-            pattern = PATTERNS[field]
+            pattern = PATTERNS.get(field)
+
+            if pattern is None:
+                continue
 
             match = re.search(
                 pattern,
