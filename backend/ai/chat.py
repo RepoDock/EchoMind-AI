@@ -562,7 +562,8 @@ def ask_llm(
             "stream": False,
         }
     )
-
+    print("Status: ",response.status_code)
+    print("Response: ",response.text)
     answer = response.json()["response"]
 
     return {
