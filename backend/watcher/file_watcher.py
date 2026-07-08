@@ -18,6 +18,18 @@ class FileWatcher(FileSystemEventHandler):
         service.index_file(event.src_path)
         print("=" * 60)
 
+    def on_deleted(self, event):
+
+        if event.is_directory:
+            return
+
+        print("=" * 60)
+        print("Deleted:", event.src_path)
+        service = IndexingService()
+
+        service.delete_document(event.src_path)
+        print("=" * 60)
+
 
 
 class Watcher:

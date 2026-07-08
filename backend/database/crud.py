@@ -1,5 +1,6 @@
 from database.connection import connection, get_cursor
 from datetime import datetime
+from utils.path_utils import normalize_path
 def get_recent_files():
     cursor = get_cursor()
     cursor.execute("""
@@ -29,6 +30,7 @@ def get_recent_files():
         for row in rows
     ]
 def get_file_by_path(path):
+    path = normalize_path(path)
     cursor = get_cursor()
 
     cursor.execute(
@@ -56,6 +58,7 @@ def get_file_by_path(path):
         "indexed_at": row["indexed_at"]
     }
 def update_file(file_id, file_data):
+    path = normalize_path(path)
     cursor = get_cursor()
 
     cursor.execute(
@@ -96,6 +99,7 @@ def mark_indexed(file_id):
     )
 
 def insert_file(file_data):
+    file_data["path"] = normalize_path(file_data["path"])
     cursor = get_cursor()
     # Check if file already exists
     cursor.execute(
@@ -261,6 +265,7 @@ def insert_document_chunk(
     return chunk_id
 
 def get_file_hash(path):
+    path = normalize_path(path)
     cursor = get_cursor()
 
     cursor.execute(
@@ -281,6 +286,7 @@ def get_file_hash(path):
 
 
 def update_file_hash(path, file_hash):
+    path = normalize_path(path)
     cursor = get_cursor()
 
     cursor.execute(
@@ -294,5 +300,31 @@ def update_file_hash(path, file_hash):
             path
         )
     )
+
+    connection.commit()
+
+
+def delete_file_by_path(path):
+    path = normalize_path(path)
+    print("Trying to delete:", path)
+
+    cursor = get_cursor()
+
+    cursor.execute(
+        "SELECT id, path FROM files WHERE path = ?",
+        (path,)
+    )
+
+    print("Found:", cursor.fetchone())
+
+    cursor.execute(
+        """
+        DELETE FROM files
+        WHERE path = ?
+        """,
+        (path,)
+    )
+
+    print("Rows deleted:", cursor.rowcount)
 
     connection.commit()

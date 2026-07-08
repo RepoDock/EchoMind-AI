@@ -1,6 +1,7 @@
 from database.metadata import should_index
 from scanner.scanner import scan_folder
 import os
+from database.crud import delete_file_by_path
 from pathlib import Path
 from ai.extractor import extract_text
 from ai.metadata_extractor import extract_metadata
@@ -166,3 +167,9 @@ class IndexingService:
             file["path"],
             calculate_hash(file["path"])
         )
+
+    def delete_document(self, file_path):
+
+        print(f"Removing: {file_path}")
+
+        delete_file_by_path(file_path)
