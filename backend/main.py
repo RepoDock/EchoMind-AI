@@ -1,7 +1,9 @@
 
 print("MAIN STARTED")
 print("0")
-
+from watcher.file_watcher import Watcher
+from database.crud import get_scan_folder
+import threading
 import os
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
@@ -83,7 +85,25 @@ app = FastAPI(
     version=APP_VERSION
 )
 
+@app.on_event("startup")
+def start_file_watcher():
 
+    folder = get_scan_folder()
+
+    if not folder:
+        print("No scan folder configured.")
+        return
+
+    watcher = Watcher(folder)
+
+    thread = threading.Thread(
+        target=watcher.start,
+        daemon=True
+    )
+
+    thread.start()
+
+    print(f"File watcher started for: {folder}")
 app.include_router(
     chat_router,
     prefix="/chat",
