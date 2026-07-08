@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AXON</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:linear-gradient(135deg,#0B1020,#111827);
+
+    color:white;
+
+    font-family:"Segoe UI",sans-serif;
+
+    overflow:hidden;
+
+}
+
+.container{
+
+    text-align:center;
+
+}
+
+.logo{
+
+    font-size:70px;
+
+    animation:pulse 2s infinite;
+
+}
+
+.title{
+
+    margin-top:20px;
+
+    font-size:38px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+}
+
+.subtitle{
+
+    margin-top:10px;
+
+    color:#AEB6C2;
+
+    font-size:18px;
+
+}
+
+.loader{
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:50%;
+
+    border:5px solid rgba(255,255,255,.15);
+
+    border-top:5px solid #38BDF8;
+
+    margin:40px auto;
+
+    animation:spin 1s linear infinite;
+
+}
+
+.status{
+
+    font-size:18px;
+
+    color:#D6D9DE;
+
+    white-space:pre-line;
+
+    min-height:90px;
+
+    line-height:1.6;
+
+}
+
+.footer{
+
+    margin-top:30px;
+
+    font-size:14px;
+
+    color:#7C8796;
+
+}
+.progress{
+
+    width:280px;
+
+    height:8px;
+
+    margin:25px auto;
+
+    background:#232C3D;
+
+    border-radius:50px;
+
+    overflow:hidden;
+
+    display:none;
+
+}
+
+#progressFill{
+
+    width:0%;
+
+    height:100%;
+
+    background:#38BDF8;
+
+    transition:width .3s;
+
+}
+
+@keyframes spin{
+
+100%{
+
+transform:rotate(360deg);
+
+}
+
+}
+
+@keyframes pulse{
+
+0%{
+
+transform:scale(1);
+
+}
+
+50%{
+
+transform:scale(1.08);
+
+}
+
+100%{
+
+transform:scale(1);
+
+}
+
+}
+
+.fade{
+
+animation:fade .6s ease;
+
+}
+
+@keyframes fade{
+
+from{
+
+opacity:0;
+
+}
+
+to{
+
+opacity:1;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container fade">
+
+<div class="logo">
+🧠
+</div>
+
+<div class="title">
+AXON
+</div>
+
+<div class="subtitle">
+Offline AI Workspace
+</div>
+
+<div class="loader"></div>
+<div class="progress">
+
+<div id="progressFill"></div>
+
+</div>
+<div class="status" id="status">
+Initializing AI...
+</div>
+
+
+<div class="footer">
+First-time setup may take a few minutes.
+</div>
+
+</div>
+
+</body>
+
+</html>
