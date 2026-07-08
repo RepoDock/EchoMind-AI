@@ -259,3 +259,40 @@ def insert_document_chunk(
     connection.commit()
 
     return chunk_id
+
+def get_file_hash(path):
+    cursor = get_cursor()
+
+    cursor.execute(
+        """
+        SELECT hash
+        FROM files
+        WHERE path = ?
+        """,
+        (path,)
+    )
+
+    row = cursor.fetchone()
+
+    if row is None:
+        return None
+
+    return row["hash"]
+
+
+def update_file_hash(path, file_hash):
+    cursor = get_cursor()
+
+    cursor.execute(
+        """
+        UPDATE files
+        SET hash = ?
+        WHERE path = ?
+        """,
+        (
+            file_hash,
+            path
+        )
+    )
+
+    connection.commit()

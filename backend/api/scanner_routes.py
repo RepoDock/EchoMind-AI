@@ -1,11 +1,12 @@
+from utils.hashing import calculate_hash
+from database.crud import update_file_hash
 from fastapi import APIRouter
 from pydantic import BaseModel
 import os
+from services.indexing_service import IndexingService
 import json
 from ai.chunker import chunk_text
-from scanner.scanner import scan_folder
 from database.connection import connection, cursor
-from ai.extractor import extract_text
 from ai.embedding import generate_embedding
 from ai.metadata_extractor import extract_metadata
 from database.connection import cursor
@@ -27,35 +28,27 @@ class ScanRequest(BaseModel):
 @router.post("/scan")
 def scan(request: ScanRequest):
 
-    files = scan_folder(request.folder_path)
-    print("=" * 60)
-    print("Detected Files:", len(files))
+    service = IndexingService()
 
-    for file in files:
-        print(file["name"])
+    files = service.index_folder(request.folder_path)
 
-    print("=" * 60)
+    for item in files:
 
-    for file in files:
+        file = item["file"]
+        document = item["document"]
 
         file_id = insert_file(file)
 
         print(file["path"])
         print(os.path.exists(file["path"]))
-        try:
-            document = extract_text(file["path"])
-        except Exception as e:
-            print(f" Failed to read {file['name']}: {e}")
-            continue
 
         if document is None:
             print(f" Failed to read: {file['name']}")
             continue
 
         if not document["text"].strip():
-            print(f" No text found in {file['name']}")
+            print(f"No text found in {file['name']}")
             continue
-
         # -------------------------
         # Extract Metadata
         # -------------------------
@@ -99,6 +92,10 @@ def scan(request: ScanRequest):
                 total_chunks += 1
 
         print(f" Indexed {total_chunks} chunks")
+        update_file_hash(
+            file["path"],
+            calculate_hash(file["path"])
+        )
 
     return {
         "status": "success",
