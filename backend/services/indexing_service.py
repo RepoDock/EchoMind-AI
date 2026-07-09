@@ -84,6 +84,9 @@ class IndexingService:
             return None
 
         document = self.extract_document(file)
+        if document is None:
+            print(f"Failed to extract: {file['name']}")
+            return None
 
         document = self.extract_metadata_from_document(
             file,
@@ -121,7 +124,7 @@ class IndexingService:
             return
             
 
-        if not document["text"].strip():
+        if not document.get("text", "").strip():
             print(f"No text found in {file['name']}")
             return
             
