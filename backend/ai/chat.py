@@ -10,6 +10,7 @@ from ai.search import (
     search_document,
     get_document_context,
 )
+from ai.hybrid_search import HybridSearch
 def detect_language(text):
 
     if re.search(r'[\u0900-\u097F]', text):
@@ -320,13 +321,17 @@ def ask_llm(
 
     if history is None:
         history = []
+    hybrid = HybridSearch()
 
     context = ""
     sources = []
 
     if file_id is None:
 
-        results = search_documents(question, top_k=5)
+        results = hybrid.search(
+            query=question,
+            top_k=5
+        )
 
 
 
