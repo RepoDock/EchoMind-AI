@@ -84,15 +84,35 @@ CREATE TABLE IF NOT EXISTS document_content (
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS document_chunks (
+
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+
     file_id INTEGER NOT NULL,
+
     page_number INTEGER NOT NULL,
+
     chunk_index INTEGER NOT NULL,
+
+    chunk_uuid TEXT,
+
     chunk_text TEXT NOT NULL,
+
+    token_count INTEGER,
+
+    quality_score REAL,
+
+    metadata_json TEXT,
+
     embedding TEXT,
-    FOREIGN KEY(file_id) REFERENCES files(id)
+
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(file_id)
+    REFERENCES files(id)
+
 )
 """)
+
 
 connection.commit()
 # ==========================================
@@ -125,6 +145,24 @@ connection.commit()
 # ==========================================
 # Create Embeddings Table
 # ==========================================
+# ==========================================
+# Create Vector Index Table
+# ==========================================
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS vector_index (
+
+    faiss_id INTEGER PRIMARY KEY,
+
+    chunk_id INTEGER UNIQUE,
+
+    FOREIGN KEY(chunk_id)
+    REFERENCES document_chunks(id)
+
+)
+""")
+
+connection.commit()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS embeddings (

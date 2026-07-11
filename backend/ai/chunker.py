@@ -1,44 +1,48 @@
-# def chunk_text(text, chunk_size=500, overlap=100):
+"""
+Compatibility wrapper for the Universal Chunking Engine.
 
-#     if not text:
-#         return []
+Existing code can continue calling:
 
-#     chunks = []
+    chunk_text(text)
 
-#     start = 0
+without knowing about the new engine.
+"""
+from __future__ import annotations
 
-#     while start < len(text):
+from ai.chunking.engine import UniversalChunkingEngine
+from ai.chunking.models import DocumentInfo
+import uuid
 
-#         end = start + chunk_size
 
-#         chunks.append(text[start:end])
+_engine = UniversalChunkingEngine()
 
-#         start += chunk_size - overlap
 
-#     return chunks
 def chunk_text(
-    text,
-    chunk_size=500,
-    overlap=100,
-    max_chunks=300
+    text: str,
+    *,
+    file_name: str = "document.txt",
+    file_path: str = "",
+    file_type: str = "txt",
 ):
 
-    if not text:
+    if not text.strip():
         return []
 
-    chunks = []
+    document = DocumentInfo(
 
-    start = 0
+        document_id=str(uuid.uuid4()),
 
-    while start < len(text):
+        file_name=file_name,
 
-        if len(chunks) >= max_chunks:
-            break
+        file_path=file_path,
 
-        end = start + chunk_size
+        file_type=file_type,
 
-        chunks.append(text[start:end])
+    )
 
-        start += chunk_size - overlap
+    result = _engine.chunk_document(
+        text=text,
+        document=document,
+    )
 
-    return chunks
+    return result.chunks

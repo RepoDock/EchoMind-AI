@@ -30,6 +30,13 @@ DATABASE_NAME = "database.db"
 DATABASE_PATH = STORAGE_DIR / DATABASE_NAME
 
 # ===============================
+# FAISS
+# ===============================
+
+FAISS_INDEX_NAME = "faiss.index"
+FAISS_INDEX_PATH = STORAGE_DIR / FAISS_INDEX_NAME
+
+# ===============================
 # Supported File Types
 # ===============================
 

@@ -1,6 +1,7 @@
 from database.connection import connection, get_cursor
 from datetime import datetime
 from utils.path_utils import normalize_path
+import json
 def get_recent_files():
     cursor = get_cursor()
     cursor.execute("""
@@ -232,29 +233,62 @@ def insert_document_chunk(
     file_id,
     page_number,
     chunk_index,
-    chunk_text,
+    chunk,
     embedding
 ):
     cursor = get_cursor()
 
     cursor.execute(
-        """
-        INSERT INTO document_chunks
+    """
+    INSERT INTO document_chunks
+    (
+
+        file_id,
+
+        page_number,
+
+        chunk_index,
+
+        chunk_uuid,
+
+        chunk_text,
+
+        token_count,
+
+        quality_score,
+
+        metadata_json,
+
+        embedding
+
+    )
+
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """,
         (
+
             file_id,
+
             page_number,
+
             chunk_index,
-            chunk_text,
-            embedding
-        )
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-            file_id,
-            page_number,
-            chunk_index,
-            chunk_text,
-            embedding
+
+            chunk.chunk_id,
+
+            chunk.text,
+
+            chunk.metadata.token_count,
+
+            chunk.metadata.extra.get(
+                "quality_score"
+            ),
+
+            json.dumps(
+                chunk.metadata.model_dump()
+            ),
+
+            embedding,
+
         )
     )
 

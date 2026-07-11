@@ -6,7 +6,7 @@ from pathlib import Path
 from ai.extractor import extract_text
 from ai.metadata_extractor import extract_metadata
 import json
-
+from ai.vector_store import add_chunk
 from ai.chunker import chunk_text
 from ai.embedding import generate_embedding
 
@@ -142,26 +142,48 @@ class IndexingService:
 
         for page in document["page_data"]:
 
-            chunks = chunk_text(page["text"])
+            chunks = chunk_text(
+
+                page["text"],
+
+                file_name=file["name"],
+
+                file_path=file["path"],
+
+                file_type=file["extension"].lstrip("."),
+
+            )
 
             for index, chunk in enumerate(chunks):
 
-                if not chunk.strip():
+                if not chunk.text.strip():
                     continue
 
-                embedding = generate_embedding(chunk)
+                embedding = generate_embedding(
+                    chunk.text
+                )
 
                 if not embedding:
                     continue
 
                 chunk_id = insert_document_chunk(
+
                     file_id,
+
                     page["page"],
+
                     index,
+
                     chunk,
-                    json.dumps(embedding)
+
+                    json.dumps(embedding),
+
                 )
 
+                add_chunk(
+                    chunk_id,
+                    embedding
+                )
 
                 total_chunks += 1
 
