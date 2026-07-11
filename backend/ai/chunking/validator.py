@@ -100,8 +100,6 @@ class ChunkValidator:
 
             tokens = chunk.metadata.token_count
 
-            if tokens < self.config.min_tokens:
-                continue
 
             if tokens > self.config.max_tokens:
                 continue

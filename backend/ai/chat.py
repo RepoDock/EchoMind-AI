@@ -430,7 +430,7 @@ def ask_llm(
 
                 search_context = get_document_context(file_id)
 
-                print(fields)
+                fields = extract_all_fields(search_context)
 # Debug
 
                 if fields:

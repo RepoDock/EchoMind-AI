@@ -56,10 +56,12 @@ def total_vectors():
 
 def get_chunk_ids(faiss_ids):
 
-    if len(faiss_ids) == 0:
+    valid_ids = [int(i) for i in faiss_ids if i >= 0]
+
+    if len(valid_ids) == 0:
         return {}
 
-    placeholders = ",".join(["?"] * len(faiss_ids))
+    placeholders = ",".join(["?"] * len(valid_ids))
 
     cursor.execute(
         f"""
@@ -69,7 +71,7 @@ def get_chunk_ids(faiss_ids):
         FROM vector_index
         WHERE faiss_id IN ({placeholders})
         """,
-        tuple(int(i) for i in faiss_ids if i >= 0)
+        tuple(valid_ids)
     )
 
     rows = cursor.fetchall()
