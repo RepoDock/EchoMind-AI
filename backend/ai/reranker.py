@@ -1,0 +1,58 @@
+from sentence_transformers import CrossEncoder
+
+
+class Reranker:
+
+    def __init__(self):
+
+        self.model = CrossEncoder(
+            "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        )
+
+    def rerank(
+        self,
+        query,
+        results
+    ):
+
+        if not results:
+            return []
+
+        pairs = []
+
+        for _, _, chunk, _, _ in results:
+
+            pairs.append(
+                (
+                    query,
+                    chunk
+                )
+            )
+
+        scores = self.model.predict(
+            pairs
+        )
+
+        reranked = []
+
+        for result, score in zip(
+            results,
+            scores
+        ):
+
+            reranked.append(
+                (
+                    result[0],
+                    float(score),
+                    result[2],
+                    result[3],
+                    result[4]
+                )
+            )
+
+        reranked.sort(
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        return reranked
