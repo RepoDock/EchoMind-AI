@@ -1,54 +1,29 @@
 import requests
-import re
+from ai.language import (
+    detect_language,
+    get_language_instruction
+)
 from ai.extractor_ai import (
     is_extraction_query,
     extract_exact_value,
 )
-from ai.prompts.base_prompt import (
-    LEARN_PROMPT,
-    RESEARCH_PROMPT
-)
+from ai.config import INTENT_TOP_K
 from ai.prompts.prompt_selector import PromptSelector
 from ai.hallucination_guard import HallucinationGuard
 from ai.extract_all import extract_all_fields
 from ai.search import (
-    search_documents,
     search_document,
     get_document_context,
 )
 from ai.intent_classifier import IntentClassifier
 from ai.hybrid_search import HybridSearch
-def detect_language(text):
 
-    if re.search(r'[\u0900-\u097F]', text):
-        return "hindi"
-
-    text = text.lower()
-
-    hinglish_words = [
-        "kya",
-        "hai",
-        "kaise",
-        "kyu",
-        "samjha",
-        "matlab",
-        "karna",
-        "krna",
-        "aur",
-        "isko",
-        "usko",
-        "mera",
-        "tum",
-        "mujhe"
-    ]
-
-    for word in hinglish_words:
-        if word in text:
-            return "hinglish"
-
-    return "english"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
+guard = HallucinationGuard()
+hybrid = HybridSearch()
+intent = IntentClassifier()
+selector = PromptSelector()
 
 
 
@@ -62,9 +37,6 @@ def ask_llm(
     if history is None:
         history = []
     
-    guard = HallucinationGuard()
-    hybrid = HybridSearch()
-    intent = IntentClassifier()
 
     query_type = intent.detect(question)
     context = ""
@@ -72,9 +44,11 @@ def ask_llm(
 
     if file_id is None:
 
+        top_k = INTENT_TOP_K.get(query_type, 5)
+
         results = hybrid.search(
             query=question,
-            top_k=5
+            top_k=top_k
         )
         # if not guard.validate(results):
 
@@ -148,10 +122,12 @@ def ask_llm(
             """
         else:
 
+            top_k = INTENT_TOP_K.get(query_type, 5)
+
             results = search_document(
                 file_id,
                 question,
-                top_k=5
+                top_k=top_k
             )
             print("=" * 60)
             for _, score, chunk, file_name, page_number in results:
@@ -246,41 +222,8 @@ def ask_llm(
 
                     seen_sources.add(source_key)
     language = detect_language(question)
-    if language == "english":
 
-        language_instruction = """
-        Reply ONLY in English.
-
-        Do NOT use Hindi.
-
-        Do NOT use Hinglish.
-
-        Never mix English with Hindi.
-        """
-
-    elif language == "hinglish":
-
-        language_instruction = """
-    Reply ONLY in Hinglish using English letters.
-
-    Do NOT use Hindi (Devanagari).
-
-    Write naturally like Indian students chat.
-
-    Example:
-
-    FTP ek protocol hai jo files transfer karne ke liye use hota hai.
-    """
-
-    else:
-
-        language_instruction = """
-    Reply ONLY in Hindi (Devanagari).
-
-    Do NOT use Hinglish.
-
-    Use simple Hindi.
-    """
+    language_instruction = get_language_instruction(language)
     conversation = ""
 
     for message in history:
@@ -289,7 +232,6 @@ def ask_llm(
 
         conversation += f"{role}: {message['text']}\n"
 
-    selector = PromptSelector()
 
     template = selector.get_prompt(
         intent=query_type,

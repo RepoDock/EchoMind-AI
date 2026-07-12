@@ -1,7 +1,12 @@
 from ai.prompts.base_prompt import (
-    LEARN_PROMPT,
-    RESEARCH_PROMPT
+    BASE_PROMPT
 )
+from ai.prompts.research_prompt import RESEARCH_PROMPT
+from ai.prompts.definition_prompt import DEFINITION_PROMPT
+from ai.prompts.explanation_prompt import EXPLANATION_PROMPT
+from ai.prompts.comparison_prompt import COMPARISON_PROMPT
+from ai.prompts.summary_prompt import SUMMARY_PROMPT
+from ai.prompts.extraction_prompt import EXTRACTION_PROMPT
 
 
 class PromptSelector:
@@ -11,4 +16,19 @@ class PromptSelector:
         if mode == "research":
             return RESEARCH_PROMPT
 
-        return LEARN_PROMPT
+        if intent == "definition":
+            return DEFINITION_PROMPT
+
+        elif intent == "compare":
+            return COMPARISON_PROMPT
+
+        elif intent == "summary":
+            return SUMMARY_PROMPT
+
+        elif intent == "extract":
+            return EXTRACTION_PROMPT
+
+        elif intent == "explanation":
+            return EXPLANATION_PROMPT
+
+        return BASE_PROMPT
