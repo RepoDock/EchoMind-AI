@@ -6,3 +6,11 @@ INTENT_TOP_K = {
     "extract": 3,
     "general": 5,
 }
+OLLAMA_URL = "http://localhost:11434/api/generate"
+
+OLLAMA_MODEL = "qwen2.5:7b"
+
+DEBUG = True
+
+HALLUCINATION_MIN_SCORE = 0.35
+HALLUCINATION_MIN_RESULTS = 2

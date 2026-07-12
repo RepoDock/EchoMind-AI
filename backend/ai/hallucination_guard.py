@@ -1,14 +1,22 @@
+from ai.config import (
+    HALLUCINATION_MIN_SCORE,
+    HALLUCINATION_MIN_RESULTS,
+)
+
+
 class HallucinationGuard:
 
-    def validate(self, confidence):
+    def validate(self, results):
 
-        score = confidence["score"]
-        level = confidence["level"]
+        if not results:
+            return False
 
-        if level == "High":
-            return True
+        if len(results) < HALLUCINATION_MIN_RESULTS:
+            return False
 
-        if level == "Medium" and score >= 0.60:
-            return True
+        best_score = results[0][1]
 
-        return False
+        if best_score < HALLUCINATION_MIN_SCORE:
+            return False
+
+        return True

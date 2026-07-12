@@ -3,26 +3,30 @@ from ai.language import (
     detect_language,
     get_language_instruction
 )
+from ai.extraction_handler import ExtractionHandler
+from ai.summary_handler import SummaryHandler
+from ai.context_builder import ContextBuilder
 from ai.citation_engine import CitationEngine
-from ai.extractor_ai import (
-    is_extraction_query,
-    extract_exact_value,
-)
 from ai.confidence import ConfidenceScorer
-from ai.config import INTENT_TOP_K
+from ai.config import (
+    INTENT_TOP_K,
+    OLLAMA_URL,
+    OLLAMA_MODEL,
+    DEBUG,
+)
 from ai.prompts.prompt_selector import PromptSelector
 from ai.hallucination_guard import HallucinationGuard
-from ai.extract_all import extract_all_fields
 from ai.search import (
-    search_document,
-    get_document_context,
+    search_document
 )
 from ai.intent_classifier import IntentClassifier
 from ai.hybrid_search import HybridSearch
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+extraction_handler = ExtractionHandler()
+summary_handler = SummaryHandler()
 confidence = ConfidenceScorer()
 citation = CitationEngine()
+context_builder = ContextBuilder()
 guard = HallucinationGuard()
 hybrid = HybridSearch()
 intent = IntentClassifier()
@@ -58,11 +62,6 @@ def ask_llm(
             query=question,
             top_k=top_k
         )
-        
-
-        
-
-
 
         if not results:
             return {
@@ -70,59 +69,25 @@ def ask_llm(
                 "sources": []
             }
         confidence_info = confidence.calculate(results)
-        if not guard.validate(confidence_info):
+        if not guard.validate(results):
 
             warning = (
                 "⚠️ This answer is based on limited information "
                 "found in your documents.\n\n"
             )
-        for _, score, chunk, file_name, page_number in results:
-
-            context += f"""
-            Source: {file_name}
-            Page: {page_number}
-
-            {chunk}
-
-            --------------------
-            """
+        context = context_builder.build(results)
         sources = citation.build(results)
 
     else:
 
-        summary_keywords = [
-                "summarize",
-                "summary",
-                "overview",
-                "explain this",
-                "explain this document",
-                "explain this ppt",
-                "explain this pdf",
-                "explain the document",
-                "summarise",
-                "describe this",
-                "what is this document about",
-            ]
+        if summary_handler.is_summary_request(question):
 
-        if any(k in question.lower() for k in summary_keywords):
+            context, question = summary_handler.prepare(file_id)
 
-                context = get_document_context(file_id)
-
-                question = """
-            Summarize this document.
-
-            Your answer should include:
-
-            1. Main topic
-            2. Important concepts
-            3. Key points
-            4. Important sections
-            5. Final conclusion (if present)
-
-            Do NOT explain what a PDF, PPT or document is.
-
-            Explain only the CONTENT of the provided document.
-            """
+            sources = [{
+                "file": "Current Document",
+                "page": "Entire Document"
+            }]
         else:
 
             top_k = INTENT_TOP_K.get(query_type, 5)
@@ -132,13 +97,17 @@ def ask_llm(
                 question,
                 top_k=top_k
             )
-            print("=" * 60)
-            for _, score, chunk, file_name, page_number in results:
-                print(page_number, score)
-                print(chunk[:250])
-                print("-" * 40)
+            if DEBUG:
 
-            print("=" * 60)
+                print("=" * 60)
+
+                for _, score, chunk, file_name, page_number in results:
+
+                    print(page_number, score)
+                    print(chunk[:250])
+                    print("-" * 40)
+
+                print("=" * 60)
 
             if not results:
                 return {
@@ -146,78 +115,29 @@ def ask_llm(
                     "sources": []
                 }
             confidence_info = confidence.calculate(results)
-            if not guard.validate(confidence_info):
+            if not guard.validate(results):
 
                 warning = (
                     "⚠️ This answer is based on limited information "
                     "found in your document.\n\n"
                 )
             # Smart Information Extraction
-            q = question.lower()
-
-            extract_all = (
-                "extract" in q
-                or ("all" in q and "information" in q)
-                or ("all" in q and "details" in q)
-                or ("key" in q and "information" in q)
-                or ("important" in q and "information" in q)
-                or ("summary" in q)
-                or ("summarize" in q)
-                or ("show" in q and "information" in q)
-                or ("give" in q and "information" in q)
+            result = extraction_handler.handle(
+                question=question,
+                file_id=file_id,
+                results=results,
+                warning=warning,
+                confidence_info=confidence_info,
+                citation_engine=citation,
             )
 
-            if extract_all:
+            if result:
+                return result
 
-                search_context = get_document_context(file_id)
-
-                fields = extract_all_fields(search_context)
-# Debug
-
-                if fields:
-
-                    answer = ""
-
-                    for key, value in fields.items():
-                        answer += f"{key.replace('_',' ').title()}: {value}\n"
-
-                    sources = citation.build(results)
-
-                    return {
-                        "answer": warning + answer,
-                        "sources": sources,
-                        "confidence": confidence_info
-                    }
-          
-            if is_extraction_query(question):
-
-                search_context = get_document_context(file_id)
-
-                fields = extract_all_fields(search_context)
-                value = extract_exact_value(
-                    question,
-                    search_context
-                )
-
-                print("Extracted:", value)
-
-                if value:
-                    sources = citation.build(results)
-
-                    return {
-                        "answer": warning + value,
-                        "sources": sources,
-                        "confidence": confidence_info
-                    }
-
-            for _, score, chunk, file_name, page_number in results:
-
-                context += f"""
-                Page: {page_number}
-
-                {chunk}
-
-                """
+            context = context_builder.build(
+                results,
+                include_source=False
+            )
 
             sources = citation.build(results)
     language = detect_language(question)
@@ -247,13 +167,15 @@ def ask_llm(
     response = requests.post(
         OLLAMA_URL,
         json={
-            "model": "llama3.2:3b",
+            "model": OLLAMA_MODEL,
             "prompt": prompt,
             "stream": False,
         }
     )
-    print("Status: ",response.status_code)
-    print("Response: ",response.text)
+    if DEBUG:
+
+        print("Status:", response.status_code)
+        print("Response:", response.text)
     answer = response.json()["response"]
     answer = warning + answer
 
