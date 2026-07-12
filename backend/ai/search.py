@@ -3,6 +3,7 @@ from ai.embedding import generate_embedding
 from ai.faiss_index import FAISSIndex
 from ai.vector_store import get_chunk_ids
 from database.connection import cursor
+from ai.query_rewriter import rewrite_query
 
 t = time.perf_counter()
 faiss_index = FAISSIndex()
@@ -19,81 +20,117 @@ def keyword_score(query, text):
     return score / max(len(query_words), 1)
 
 
-def _search(query, file_id=None, top_k=8):
-    query_embedding = generate_embedding(query)
+def _search(
+        query,
+        file_id=None,
+        history=None,
+        top_k=8
+    ):
 
-    faiss_ids, semantic_scores = faiss_index.search_ids(
-        query_embedding,
-        top_k=50
+    queries = rewrite_query(
+        query,
+        history
     )
 
-    mapping = get_chunk_ids(faiss_ids)
+    results = {}
 
-    results = []
+    for q in queries:
 
-    for faiss_id, semantic_score in zip(faiss_ids, semantic_scores):
+        query_embedding = generate_embedding(q)
 
-        if faiss_id == -1:
-            continue
-
-        chunk_id = mapping.get(int(faiss_id))
-
-        if chunk_id is None:
-            continue
-
-        if file_id is None:
-            cursor.execute("""
-                SELECT
-                    dc.file_id,
-                    dc.page_number,
-                    dc.chunk_text,
-                    f.name
-                FROM document_chunks dc
-                JOIN files f
-                    ON dc.file_id = f.id
-                WHERE dc.id = ?
-            """, (chunk_id,))
-        else:
-            cursor.execute("""
-                SELECT
-                    dc.file_id,
-                    dc.page_number,
-                    dc.chunk_text,
-                    f.name
-                FROM document_chunks dc
-                JOIN files f
-                    ON dc.file_id = f.id
-                WHERE dc.id = ?
-                  AND dc.file_id = ?
-            """, (chunk_id, file_id))
-
-        row = cursor.fetchone()
-
-        if row is None:
-            continue
-
-        boost = keyword_score(query, row["chunk_text"])
-
-        score = (
-            float(semantic_score) * 0.80 +
-            boost * 0.20
+        faiss_ids, semantic_scores = faiss_index.search_ids(
+            query_embedding,
+            top_k=50
         )
 
-        if score < 0.25:
-            continue
+        mapping = get_chunk_ids(faiss_ids)
 
-        results.append((
-            row["file_id"],
-            score,
-            row["chunk_text"],
-            row["name"],
-            row["page_number"]
-        ))
+        for faiss_id, semantic_score in zip(
+            faiss_ids,
+            semantic_scores
+        ):
 
-    results.sort(key=lambda x: x[1], reverse=True)
+            if faiss_id == -1:
+                continue
+
+            chunk_id = mapping.get(int(faiss_id))
+
+            if chunk_id is None:
+                continue
+
+            if file_id is None:
+
+                cursor.execute("""
+                    SELECT
+                        dc.file_id,
+                        dc.page_number,
+                        dc.chunk_text,
+                        f.name
+                    FROM document_chunks dc
+                    JOIN files f
+                        ON dc.file_id = f.id
+                    WHERE dc.id = ?
+                """, (chunk_id,))
+
+            else:
+
+                cursor.execute("""
+                    SELECT
+                        dc.file_id,
+                        dc.page_number,
+                        dc.chunk_text,
+                        f.name
+                    FROM document_chunks dc
+                    JOIN files f
+                        ON dc.file_id = f.id
+                    WHERE dc.id = ?
+                    AND dc.file_id = ?
+                """, (chunk_id, file_id))
+
+            row = cursor.fetchone()
+
+            if row is None:
+                continue
+
+            boost = keyword_score(
+                q,
+                row["chunk_text"]
+            )
+
+            score = (
+                float(semantic_score) * 0.80 +
+                boost * 0.20
+            )
+
+            if score < 0.25:
+                continue
+
+            key = (
+                row["file_id"],
+                row["page_number"]
+            )
+
+            item = (
+                row["file_id"],
+                score,
+                row["chunk_text"],
+                row["name"],
+                row["page_number"]
+            )
+
+            old = results.get(key)
+
+            if old is None or score > old[1]:
+                results[key] = item
+
+    results = list(results.values())
+
+    results.sort(
+        key=lambda x: x[1],
+        reverse=True
+    )
 
     return results[:top_k]
-
 
 def search_documents(query, top_k=8):
     return _search(
@@ -103,11 +140,17 @@ def search_documents(query, top_k=8):
     )
 
 
-def search_document(file_id, query, top_k=8):
+def search_document(
+    file_id,
+    query,
+    history=None,
+    top_k=8
+):
     return _search(
-        query=query,
-        file_id=file_id,
-        top_k=top_k
+        query,
+        file_id,
+        history,
+        top_k
     )
 
 

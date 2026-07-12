@@ -94,8 +94,9 @@ def ask_llm(
             top_k = INTENT_TOP_K.get(query_type, 5)
 
             results = search_document(
-                file_id,
-                question,
+                file_id=file_id,
+                query=question,
+                history=history,
                 top_k=top_k
             )
             if DEBUG:

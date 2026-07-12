@@ -58,8 +58,8 @@ def get_last_topic(history):
         lower
     )
 
-    if m:
-        return m.group(2).strip()
+        if m:
+            return m.group(2).strip()
     return None
 def rewrite_query(query, history=None):
 
