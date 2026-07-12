@@ -6,6 +6,7 @@ from collections import OrderedDict
 from database.connection import cursor
 from ai.reranker import Reranker
 from ai.query_rewriter import rewrite_query
+from ai.context_compressor import ContextCompressor
 class HybridSearch:
 
     def __init__(self):
@@ -15,6 +16,8 @@ class HybridSearch:
         self.bm25 = BM25Index()
 
         self.reranker = Reranker()
+
+        self.compressor = ContextCompressor()
  
     def expand_chunks(self, results):
 
@@ -253,5 +256,6 @@ class HybridSearch:
             query,
             results
         )
+        results = self.compressor.compress(results)
 
         return results[:5]
