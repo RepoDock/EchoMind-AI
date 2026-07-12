@@ -30,7 +30,9 @@ class Reranker:
             )
 
         scores = self.model.predict(
-            pairs
+            pairs,
+            batch_size=16,
+            show_progress_bar=False
         )
 
         reranked = []
