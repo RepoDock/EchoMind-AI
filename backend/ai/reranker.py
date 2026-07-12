@@ -20,7 +20,7 @@ class Reranker:
 
         pairs = []
 
-        for _, _, chunk, _, _ in results:
+        for _, _, _, chunk, _, _ in results:
 
             pairs.append(
                 (
@@ -41,17 +41,18 @@ class Reranker:
         ):
 
             reranked.append(
-                (
-                    result[0],
-                    float(score),
-                    result[2],
-                    result[3],
-                    result[4]
-                )
+            (
+                result[0],      # chunk_id
+                result[1],      # file_id
+                float(score),
+                result[3],      # chunk
+                result[4],      # file
+                result[5]       # page
             )
+        )
 
         reranked.sort(
-            key=lambda x: x[1],
+            key=lambda x: x[2],
             reverse=True
         )
 

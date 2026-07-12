@@ -2,7 +2,7 @@ from ai.embedding import generate_embedding
 from ai.faiss_index import FAISSIndex
 from ai.vector_store import get_chunk_ids
 from ai.bm25_index import BM25Index
-
+from collections import OrderedDict
 from database.connection import cursor
 from ai.reranker import Reranker
 from ai.query_rewriter import rewrite_query
@@ -15,7 +15,80 @@ class HybridSearch:
         self.bm25 = BM25Index()
 
         self.reranker = Reranker()
+ 
+    def expand_chunks(self, results):
 
+        expanded = []
+
+        for chunk_id, file_id, score, chunk, file_name, page_number in results:
+
+            cursor.execute(
+                """
+                SELECT
+                    chunk_index
+                FROM document_chunks
+                WHERE id = ?
+                """,
+                (chunk_id,)
+            )
+
+            row = cursor.fetchone()
+
+            if row is None:
+
+                expanded.append(
+                    (
+                        chunk_id,
+                        file_id,
+                        score,
+                        chunk,
+                        file_name,
+                        page_number
+                    )
+                )
+
+                continue
+
+            chunk_index = row["chunk_index"]
+
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    chunk_text
+                FROM document_chunks
+                WHERE
+                    file_id = ?
+                AND
+                    chunk_index BETWEEN ? AND ?
+                ORDER BY chunk_index
+                """,
+                (
+                    file_id,
+                    chunk_index - 1,
+                    chunk_index + 1
+                )
+            )
+
+            neighbours = cursor.fetchall()
+
+            merged = "\n\n".join(
+                n["chunk_text"]
+                for n in neighbours
+            )
+
+            expanded.append(
+                (
+                    chunk_id,
+                    file_id,
+                    score,
+                    merged,
+                    file_name,
+                    page_number
+                )
+            )
+
+        return expanded
     def search(
         self,
         query,
@@ -98,6 +171,7 @@ class HybridSearch:
 
         seen = set()
         document_count = {}
+        selected_pages = {}
 
         for chunk_id, score in ranked:
 
@@ -125,11 +199,22 @@ class HybridSearch:
             file_id = row["file_id"]
 
             document_count[file_id] = document_count.get(file_id, 0)
+            selected_pages.setdefault(file_id, [])
 
-            # Ek document se maximum 2 chunks
-
-            if document_count[file_id] >= 2:
+            # Maximum 4 chunks per document
+            if document_count[file_id] >= 4:
                 continue
+
+            # Avoid very distant pages
+            if selected_pages[file_id]:
+
+                nearest = min(
+                    abs(row["page_number"] - p)
+                    for p in selected_pages[file_id]
+                )
+
+                if nearest > 5:
+                    continue
 
             key = (
                 row["file_id"],
@@ -142,9 +227,13 @@ class HybridSearch:
             seen.add(key)
 
             document_count[file_id] += 1
+            selected_pages[file_id].append(
+                row["page_number"]
+            )
 
             results.append(
                 (
+                    chunk_id,
                     row["file_id"],
                     score,
                     row["chunk_text"],
@@ -159,7 +248,7 @@ class HybridSearch:
         # -------------------------
     # Cross Encoder Reranking
     # -------------------------
-
+        results = self.expand_chunks(results)
         results = self.reranker.rerank(
             query,
             results
