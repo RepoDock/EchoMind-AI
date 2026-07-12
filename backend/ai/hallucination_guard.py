@@ -1,18 +1,14 @@
 class HallucinationGuard:
 
-    def validate(self, results):
+    def validate(self, confidence):
 
-        if not results:
-            return False
+        score = confidence["score"]
+        level = confidence["level"]
 
-        # Minimum retrieved chunks
-        if len(results) < 2:
-            return False
+        if level == "High":
+            return True
 
-        # Minimum retrieval score
-        best_score = results[0][1]
+        if level == "Medium" and score >= 0.60:
+            return True
 
-        if best_score < 0.35:
-            return False
-
-        return True
+        return False

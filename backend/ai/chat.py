@@ -3,10 +3,12 @@ from ai.language import (
     detect_language,
     get_language_instruction
 )
+from ai.citation_engine import CitationEngine
 from ai.extractor_ai import (
     is_extraction_query,
     extract_exact_value,
 )
+from ai.confidence import ConfidenceScorer
 from ai.config import INTENT_TOP_K
 from ai.prompts.prompt_selector import PromptSelector
 from ai.hallucination_guard import HallucinationGuard
@@ -19,7 +21,8 @@ from ai.intent_classifier import IntentClassifier
 from ai.hybrid_search import HybridSearch
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-
+confidence = ConfidenceScorer()
+citation = CitationEngine()
 guard = HallucinationGuard()
 hybrid = HybridSearch()
 intent = IntentClassifier()
@@ -41,6 +44,11 @@ def ask_llm(
     query_type = intent.detect(question)
     context = ""
     sources = []
+    confidence_info = {
+        "score": 0.0,
+        "level": "Low"
+    }
+    warning = ""
 
     if file_id is None:
 
@@ -50,12 +58,9 @@ def ask_llm(
             query=question,
             top_k=top_k
         )
-        # if not guard.validate(results):
+        
 
-        #     return {
-        #         "answer": "I couldn't find enough information in your documents to answer this question reliably.",
-        #         "sources": []
-        #     }
+        
 
 
 
@@ -64,8 +69,13 @@ def ask_llm(
                 "answer": "I couldn't find this information in your documents.",
                 "sources": []
             }
-        seen_files = set()
+        confidence_info = confidence.calculate(results)
+        if not guard.validate(confidence_info):
 
+            warning = (
+                "⚠️ This answer is based on limited information "
+                "found in your documents.\n\n"
+            )
         for _, score, chunk, file_name, page_number in results:
 
             context += f"""
@@ -76,14 +86,7 @@ def ask_llm(
 
             --------------------
             """
-
-
-            if score >= 0.25 and file_name not in seen_files:
-                sources.append({
-                    "file": file_name,
-                    "page": page_number
-                })
-                seen_files.add(file_name)
+        sources = citation.build(results)
 
     else:
 
@@ -142,6 +145,13 @@ def ask_llm(
                     "answer": "I couldn't find this information in your document.",
                     "sources": []
                 }
+            confidence_info = confidence.calculate(results)
+            if not guard.validate(confidence_info):
+
+                warning = (
+                    "⚠️ This answer is based on limited information "
+                    "found in your document.\n\n"
+                )
             # Smart Information Extraction
             q = question.lower()
 
@@ -171,12 +181,12 @@ def ask_llm(
                     for key, value in fields.items():
                         answer += f"{key.replace('_',' ').title()}: {value}\n"
 
+                    sources = citation.build(results)
+
                     return {
-                        "answer": value,
-                        "sources": [{
-                            "file": results[0][3],
-                            "page": results[0][4]
-                        }]
+                        "answer": warning + answer,
+                        "sources": sources,
+                        "confidence": confidence_info
                     }
           
             if is_extraction_query(question):
@@ -192,15 +202,13 @@ def ask_llm(
                 print("Extracted:", value)
 
                 if value:
-                    return {
-                        "answer": value,
-                        "sources": [{
-                            "file": results[0][3],
-                            "page": "Entire Document"
-                        }]
-                    }
+                    sources = citation.build(results)
 
-            seen_sources = set()
+                    return {
+                        "answer": warning + value,
+                        "sources": sources,
+                        "confidence": confidence_info
+                    }
 
             for _, score, chunk, file_name, page_number in results:
 
@@ -211,16 +219,7 @@ def ask_llm(
 
                 """
 
-                source_key = (file_name, page_number)
-
-                if source_key not in seen_sources:
-
-                    sources.append({
-                        "file": file_name,
-                        "page": page_number
-                    })
-
-                    seen_sources.add(source_key)
+            sources = citation.build(results)
     language = detect_language(question)
 
     language_instruction = get_language_instruction(language)
@@ -256,8 +255,10 @@ def ask_llm(
     print("Status: ",response.status_code)
     print("Response: ",response.text)
     answer = response.json()["response"]
+    answer = warning + answer
 
     return {
         "answer": answer,
-        "sources": sources
+        "sources": sources,
+        "confidence": confidence_info
     }
