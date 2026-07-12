@@ -60,6 +60,7 @@ def ask_llm(
 
         results = hybrid.search(
             query=question,
+            history=history,
             top_k=top_k
         )
 

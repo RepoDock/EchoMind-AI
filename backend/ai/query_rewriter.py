@@ -33,9 +33,35 @@ QUERY_MAP = {
 def clean_query(query):
     query = re.sub(r"[^\w\s]", "", query)
     return query.strip()
+def get_last_topic(history):
 
+    if not history:
+        return None
 
-def rewrite_query(query):
+    # latest user messages first
+    for message in reversed(history):
+
+        if message.get("role") != "user":
+            continue
+
+        text = message.get("text", "").strip()
+
+        if not text:
+            continue
+
+        text = clean_query(text)
+
+        lower = text.lower()
+
+        m = re.match(
+        r"^(what is|what are|define|explain|compare)\s+(.+)$",
+        lower
+    )
+
+    if m:
+        return m.group(2).strip()
+    return None
+def rewrite_query(query, history=None):
 
     query = clean_query(query)
 
@@ -44,6 +70,42 @@ def rewrite_query(query):
     queries.add(query)
 
     q = query.lower()
+    topic = get_last_topic(history)
+
+    FOLLOWUPS = [
+
+        "advantages",
+        "advantages?",
+        "benefits",
+        "benefits?",
+        "limitations",
+        "limitations?",
+        "disadvantages",
+        "uses",
+        "uses?",
+        "features",
+        "features?",
+        "working",
+        "working?",
+        "how",
+        "how?",
+        "why",
+        "why?",
+        "continue",
+        "continue.",
+        "explain more",
+        "tell me more",
+        "more",
+        "more details"
+    ]
+
+    if topic and q in FOLLOWUPS:
+
+        query = f"{q.rstrip('?')} of {topic}"
+
+        q = query.lower()
+
+        queries.add(query)
 
     # -----------------------------
     # Explain
@@ -65,10 +127,26 @@ def rewrite_query(query):
     # -----------------------------
     # What is
     # -----------------------------
+    elif topic and q in [
 
-    elif q.startswith("what is "):
+        "compare",
 
-        topic = query[8:].strip()
+        "compare both",
+
+        "difference",
+
+        "difference?",
+
+        "compare them"
+
+    ]:
+
+        query = f"Compare {topic}"
+
+        queries.add(query)
+    elif re.match(r"^(what is|what are)\s+", q):
+
+        topic = re.sub(r"^(what is|what are)\s+", "", query, flags=re.I).strip()
 
         queries.update([
             topic,

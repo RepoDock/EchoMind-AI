@@ -8,6 +8,16 @@ class IntentClassifier:
         q = query.lower().strip()
 
         # -----------------------
+        # Follow-up
+        # -----------------------
+
+        if re.fullmatch(
+            r"(continue|explain more|tell me more|go deeper|elaborate|why\??|how\??|what about.*|and then.*)",
+            q
+        ):
+            return "followup"
+
+        # -----------------------
         # Summary
         # -----------------------
 
@@ -16,20 +26,32 @@ class IntentClassifier:
             "summary",
             "overview",
             "brief",
-            "gist"
+            "gist",
+            "tldr",
+            "tl;dr",
+            "main points",
+            "key points",
+            "key takeaways",
+            "in short"
         ]):
             return "summary"
 
         # -----------------------
-        # Compare
+        # Comparison
         # -----------------------
 
-        if any(x in q for x in [
-            "compare",
-            "difference",
-            "vs",
-            "versus"
-        ]):
+        if (
+            any(x in q for x in [
+                "compare",
+                "difference",
+                "versus",
+                "vs",
+                "similarities",
+                "advantages and disadvantages",
+                "pros and cons"
+            ])
+            or re.search(r"\b.+\s+vs\s+.+\b", q)
+        ):
             return "compare"
 
         # -----------------------
@@ -40,7 +62,15 @@ class IntentClassifier:
             "extract",
             "find",
             "list",
-            "show all"
+            "show all",
+            "give all",
+            "names",
+            "dates",
+            "emails",
+            "phone numbers",
+            "companies",
+            "addresses",
+            "ids"
         ]):
             return "extract"
 
@@ -48,9 +78,12 @@ class IntentClassifier:
         # Definition
         # -----------------------
 
-        if re.match(
-            r"^(what is|what are|define)\b",
-            q
+        if (
+            re.match(
+                r"^(what is|what are|define|meaning of|full form of|expand)\b",
+                q
+            )
+            or "stands for" in q
         ):
             return "definition"
 
@@ -60,9 +93,13 @@ class IntentClassifier:
 
         if any(x in q for x in [
             "explain",
-            "how",
-            "why",
-            "working"
+            "working",
+            "how does",
+            "how do",
+            "why does",
+            "why do",
+            "how it works",
+            "why it works"
         ]):
             return "explanation"
 

@@ -95,10 +95,14 @@ class HybridSearch:
     def search(
         self,
         query,
+        history=None,
         top_k=20
-        ):
+    ):
 
-        queries = rewrite_query(query)
+        queries = rewrite_query(
+            query,
+            history
+        )
 
         fused = {}
 
