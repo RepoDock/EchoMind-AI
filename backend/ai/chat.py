@@ -5,6 +5,7 @@ from ai.language import (
 )
 import time
 import json
+from ai.semantic_cache import SemanticCache
 from ai.extraction_handler import ExtractionHandler
 from ai.summary_handler import SummaryHandler
 from ai.context_builder import ContextBuilder
@@ -15,12 +16,22 @@ from ai.config import (
     OLLAMA_URL,
     OLLAMA_MODEL,
     DEBUG,
+    MAX_CONTEXT_CHARS,
 )
 from ai.prompts.prompt_selector import PromptSelector
 from ai.hallucination_guard import HallucinationGuard
 from ai.intent_classifier import IntentClassifier
 from ai.hybrid_search import HybridSearch
+import sys
 
+print("\n===== Hybrid Modules =====")
+print([m for m in sys.modules if "hybrid_search" in m])
+print("==========================\n")
+import inspect
+
+print(inspect.getfile(HybridSearch))
+
+cache = SemanticCache()
 extraction_handler = ExtractionHandler()
 summary_handler = SummaryHandler()
 confidence = ConfidenceScorer()
@@ -32,6 +43,12 @@ intent = IntentClassifier()
 selector = PromptSelector()
 
 
+def trim_context(context, limit):
+
+    if len(context) <= limit:
+        return context
+
+    return context[:limit] + "\n\n[Context Truncated]"
 
 def ask_llm(
     question,
@@ -49,6 +66,16 @@ def ask_llm(
     
 
     query_type = intent.detect(question)
+    cached = cache.get(
+        question,
+        file_id
+    )
+
+    if cached:
+
+        print("CACHE HIT")
+
+        return cached
     context = ""
     sources = []
     confidence_info = {
@@ -61,6 +88,8 @@ def ask_llm(
 
         top_k = INTENT_TOP_K.get(query_type, 5)
         search_start = time.perf_counter()
+        print("About to call hybrid.search()")
+        print("ask llm called")
         results = hybrid.search(
             query=question,
             history=history,
@@ -80,6 +109,10 @@ def ask_llm(
                 "found in your documents.\n\n"
             )
         context = context_builder.build(results)
+        context = trim_context(
+            context,
+            MAX_CONTEXT_CHARS
+        )
         sources = citation.build(results)
 
     else:
@@ -147,6 +180,10 @@ def ask_llm(
                 results,
                 include_source=False
             )
+            context = trim_context(
+                context,
+                MAX_CONTEXT_CHARS
+            )
 
             sources = citation.build(results)
     language = detect_language(question)
@@ -198,11 +235,23 @@ def ask_llm(
     print(f"LLM          : {llm_time:.3f} s")
     print(f"Total        : {total_time:.3f} s")
     print("=================================\n")
-    return {
+    result = {
+
         "answer": answer,
+
         "sources": sources,
+
         "confidence": confidence_info
+
     }
+
+    cache.put(
+        question,
+        result,
+        file_id
+    )
+
+    return result
 
 def ask_llm_stream(
     question,
@@ -232,11 +281,13 @@ def ask_llm_stream(
 
             top_k = INTENT_TOP_K.get(query_type, 5)
             search_start = time.perf_counter()
+            print("About to call hybrid.search()")
             results = hybrid.search(
                 query=question,
                 history=history,
                 top_k=top_k
             )
+            print("Returned from hybrid.search()")
             search_time = time.perf_counter() - search_start
             if not results:
                 return {
@@ -251,10 +302,15 @@ def ask_llm_stream(
                     "found in your documents.\n\n"
                 )
             context = context_builder.build(results)
+            context = trim_context(
+                context,
+                MAX_CONTEXT_CHARS
+            )
             sources = citation.build(results)
 
         else:
-
+            print("Summary:", summary_handler.is_summary_request(question))
+            print("Question:", question)
             if summary_handler.is_summary_request(question):
 
                 context, question = summary_handler.prepare(file_id)
@@ -268,13 +324,14 @@ def ask_llm_stream(
                 top_k = INTENT_TOP_K.get(query_type, 5)
 
                 search_start = time.perf_counter()
-
+                print("About to call hybrid.search()")
                 results = hybrid.search(
                     query=question,
                     history=history,
                     top_k=top_k,
                     file_id=file_id
                 )
+                print("Returned from hybrid.search()")
 
                 search_time = time.perf_counter() - search_start
                 if DEBUG:
@@ -317,6 +374,10 @@ def ask_llm_stream(
                 context = context_builder.build(
                     results,
                     include_source=False
+                )
+                context = trim_context(
+                    context,
+                    MAX_CONTEXT_CHARS
                 )
 
                 sources = citation.build(results)

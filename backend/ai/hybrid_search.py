@@ -7,6 +7,7 @@ from database.connection import cursor
 from ai.reranker import Reranker
 from ai.query_rewriter import rewrite_query
 from ai.context_compressor import ContextCompressor
+import time
 class HybridSearch:
 
     def __init__(self):
@@ -98,12 +99,20 @@ class HybridSearch:
         history=None,
         top_k=20,
         file_id=None
-    ):
+    ):  
+        print(">>>>>>>> HYBRID SEARCH STARTED <<<<<<<<")
+        total_start = time.perf_counter()
+        start = time.perf_counter()
+        embedding_time = 0
+        faiss_time = 0
+        bm25_time = 0
 
         queries = rewrite_query(
             query,
             history
         )
+
+        rewrite_time = time.perf_counter() - start
 
         fused = {}
 
@@ -113,12 +122,20 @@ class HybridSearch:
             # FAISS
             # -------------------------
 
+            embed_start = time.perf_counter()
+
             embedding = generate_embedding(q)
+
+            embedding_time += time.perf_counter() - embed_start
+
+            faiss_start = time.perf_counter()
 
             faiss_ids, faiss_scores = self.faiss.search_ids(
                 embedding,
                 top_k=30
             )
+
+            faiss_time += time.perf_counter() - faiss_start
 
             faiss_mapping = get_chunk_ids(
                 faiss_ids
@@ -148,10 +165,14 @@ class HybridSearch:
             # BM25
             # -------------------------
 
+            bm25_start = time.perf_counter()
+
             bm25 = self.bm25.search(
                 q,
                 top_k=30
             )
+
+            bm25_time += time.perf_counter() - bm25_start
 
             if bm25:
 
@@ -180,7 +201,7 @@ class HybridSearch:
         seen = set()
         document_count = {}
         selected_pages = {}
-
+        sql_start = time.perf_counter()
         for chunk_id, score in ranked:
 
             if file_id is None:
@@ -275,14 +296,40 @@ class HybridSearch:
             if len(results) >= top_k:
                 break
 
+        sql_time = time.perf_counter() - sql_start
         # -------------------------
     # Cross Encoder Reranking
     # -------------------------
+        expand_start = time.perf_counter()
+
         results = self.expand_chunks(results)
+
+        expand_time = time.perf_counter() - expand_start
+        rerank_start = time.perf_counter()
+
         results = self.reranker.rerank(
             query,
             results
         )
+
+        rerank_time = time.perf_counter() - rerank_start
+        compress_start = time.perf_counter()
+
         results = self.compressor.compress(results)
 
+        compress_time = time.perf_counter() - compress_start
+        total_time = time.perf_counter() - total_start
+        print(">>>>>>>> HYBRID SEARCH FINISHED <<<<<<<<")
+        print("\n========== Retrieval ==========")
+        print(f"Rewrite   : {rewrite_time*1000:.1f} ms")
+        print(f"Embedding : {embedding_time*1000:.1f} ms")
+        print(f"FAISS     : {faiss_time*1000:.1f} ms")
+        print(f"BM25      : {bm25_time*1000:.1f} ms")
+        print(f"SQL Fetch : {sql_time*1000:.1f} ms")
+        print(f"Expand    : {expand_time*1000:.1f} ms")
+        print(f"Rerank    : {rerank_time*1000:.1f} ms")
+        print(f"Compress  : {compress_time*1000:.1f} ms")
+        print("-------------------------------")
+        print(f"TOTAL     : {total_time*1000:.1f} ms")
+        print("===============================\n")
         return results[:5]
