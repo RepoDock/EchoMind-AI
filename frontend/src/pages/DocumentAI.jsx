@@ -1,6 +1,9 @@
 import Sidebar from "../components/Sidebar";
 import { useParams } from "react-router-dom";
-import { getFiles, askDocumentAI } from "../services/api";
+import {
+    getFiles,
+    streamDocumentChat
+} from "../services/api";
 import { useEffect, useState, useRef } from "react";
 import { FiSend } from "react-icons/fi";
 function DocumentAI() {
@@ -10,8 +13,11 @@ function DocumentAI() {
     const [question, setQuestion] = useState("");
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState([]);
+
     const [messages, setMessages] = useState([]);
     const messagesEndRef = useRef(null);
+    const streamBufferRef = useRef("");
+    const renderTimerRef = useRef(null);
     const textareaRef = useRef(null);
     useEffect(() => {
 
@@ -41,70 +47,129 @@ function DocumentAI() {
             textarea.style.height = "56px";
             textarea.style.height = `${textarea.scrollHeight}px`;
         };
-    const handleAsk = async () => {
+        const handleAsk = async () => {
 
-        if (!question.trim()) return;
+            if (!question.trim()) return;
 
-        try {
+            const userQuestion = question;
+
+            setQuestion("");
+
+            if (textareaRef.current) {
+                textareaRef.current.style.height = "56px";
+            }
 
             setLoading(true);
 
-            const response = await askDocumentAI(
-                Number(id),
-                question,
-                history
-            );
+            const userMessage = {
+                role: "user",
+                text: userQuestion,
+            };
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    role: "user",
-                    text: question,
-                },
-                {
-                    role: "assistant",
-                    text: response.data.answer,
-                    sources: response.data.sources,
-                },
-                ]);
+            const currentMessages = [
+                ...messages,
+                userMessage,
+            ];
 
-                setQuestion("");
-                if (textareaRef.current) {
-                    textareaRef.current.style.height = "56px";
+            setMessages(currentMessages);
+
+            try {
+
+                let assistantMessage = null;
+                let firstChunk = true;
+
+                await streamDocumentChat(
+                    Number(id),
+                    userQuestion,
+                    history,
+                    "research",
+                    (chunk) => {
+
+                        if (firstChunk) {
+
+                            setLoading(false);
+
+                            assistantMessage = {
+                                role: "assistant",
+                                text: chunk,
+                                sources: [],
+                            };
+
+                            setMessages(prev => [
+                                ...prev,
+                                assistantMessage,
+                            ]);
+
+                            firstChunk = false;
+                            return;
+                        }
+
+                        streamBufferRef.current += chunk;
+
+                        if (renderTimerRef.current) return;
+
+                        renderTimerRef.current = setTimeout(() => {
+
+                            assistantMessage.text += streamBufferRef.current;
+
+                            streamBufferRef.current = "";
+
+                            setMessages(prev => {
+
+                                const updated = [...prev];
+
+                                updated[updated.length - 1] = {
+                                    ...assistantMessage,
+                                };
+
+                                return updated;
+
+                            });
+
+                            renderTimerRef.current = null;
+
+                        }, 50);
+
+                    }
+                );
+
+                if (streamBufferRef.current) {
+
+                    assistantMessage.text += streamBufferRef.current;
+
+                    streamBufferRef.current = "";
+
                 }
 
-            setHistory([
-                ...history,
-                {
-                    role: "user",
-                    text: question,
-                },
-                {
-                    role: "assistant",
-                    text: response.data.answer,
-                    sources: response.data.sources,
-                },
-            ]);
+                const updatedMessages = [
+                    ...currentMessages,
+                    assistantMessage,
+                ];
 
-        } catch (err) {
+                setMessages(updatedMessages);
 
-            console.error(err);
+                setHistory(updatedMessages);
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    role: "assistant",
-                    text: "Something went wrong.",
-                },
+            } catch (err) {
+
+                console.error(err);
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        role: "assistant",
+                        text: "Something went wrong.",
+                    },
                 ]);
 
-        } finally {
+            } finally {
 
-            setLoading(false);
+                setLoading(false);
 
-        }
+            }
 
         };
+        
   return (
     <div className="h-screen overflow-hidden app-bg flex">
   <Sidebar />
