@@ -8,7 +8,7 @@ class ConfidenceScorer:
                 "level": "Low"
             }
 
-        scores = [score for _, score, *_ in results]
+        scores = [score for _, _, score, *_ in results]
 
         avg_score = sum(scores) / len(scores)
 

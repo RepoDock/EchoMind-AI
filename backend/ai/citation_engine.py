@@ -6,7 +6,7 @@ class CitationEngine:
 
         seen = set()
 
-        for _, score, chunk, file_name, page_number in results:
+        for _, _, score, chunk, file_name, page_number, *extra in results:
 
             key = (file_name, page_number)
 

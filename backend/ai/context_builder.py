@@ -4,7 +4,15 @@ class ContextBuilder:
 
         context = ""
 
-        for _, score, chunk, file_name, page_number in results:
+        for (
+            chunk_id,
+            file_id,
+            score,
+            chunk,
+            file_name,
+            page_number,
+            *extra
+        ) in results:
 
             if include_source:
 

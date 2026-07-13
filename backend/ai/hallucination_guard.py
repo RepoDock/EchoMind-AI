@@ -14,7 +14,7 @@ class HallucinationGuard:
         if len(results) < HALLUCINATION_MIN_RESULTS:
             return False
 
-        best_score = results[0][1]
+        best_score = results[0][2]
 
         if best_score < HALLUCINATION_MIN_SCORE:
             return False

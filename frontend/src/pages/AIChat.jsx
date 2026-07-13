@@ -1,5 +1,7 @@
 
-import { chatWithAI } from "../services/api";
+import {
+  streamChatWithAI
+} from "../services/api";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { useState, useRef, useEffect } from "react";
@@ -12,6 +14,8 @@ import {
 } from "lucide-react";
 function AIChat() {
   const messagesEndRef = useRef(null);
+  const streamBufferRef = useRef("");
+  const renderTimerRef = useRef(null);
   const [mode, setMode] = useState("research");
   const [question, setQuestion] = useState("");
   const [showModes, setShowModes] = useState(false);
@@ -111,30 +115,82 @@ const sendMessage = async () => {
 
   // User message turant UI me dikhao
   setMessages(currentMessages);
+    try {
 
-  try {
-    const response = await chatWithAI(
+    let assistantMessage = null;
+    let firstChunk = true;
+
+    await streamChatWithAI(
       userQuestion,
       currentMessages,
-      mode
+      mode,
+      (chunk) => {
+
+      if (firstChunk) {
+
+        setIsThinking(false);
+
+        assistantMessage = {
+          role: "assistant",
+          text: chunk,
+          sources: [],
+        };
+
+        setMessages(prev => [
+          ...prev,
+          assistantMessage,
+        ]);
+
+        firstChunk = false;
+        return;
+      }
+
+      streamBufferRef.current += chunk;
+
+      if (renderTimerRef.current) return;
+
+      renderTimerRef.current = setTimeout(() => {
+
+          assistantMessage.text += streamBufferRef.current;
+
+          streamBufferRef.current = "";
+
+          setMessages(prev => {
+
+              const updated = [...prev];
+
+              updated[updated.length - 1] = {
+                  ...assistantMessage,
+              };
+
+              return updated;
+
+          });
+
+          renderTimerRef.current = null;
+
+      }, 50);
+
+    }
     );
-    console.log("AI Response:", response);
+    if (streamBufferRef.current) {
 
-    const assistantMessage = {
-      role: "assistant",
-      text: response.data.answer,
-      sources: response.data.sources,
-    };
+        assistantMessage.text += streamBufferRef.current;
 
+        streamBufferRef.current = "";
+
+    }
     const updatedMessages = [
       ...currentMessages,
       assistantMessage,
     ];
 
     setMessages(updatedMessages);
+
     console.log("Creating new chat...");
-    console.log("Reached after AI response");
+
     if (currentChatId === null) {
+
       const chat = {
         id: Date.now(),
         title:
@@ -143,11 +199,12 @@ const sendMessage = async () => {
             : userQuestion,
         messages: updatedMessages,
       };
-      console.log(chat);
 
       setChats((prev) => [chat, ...prev]);
       setCurrentChatId(chat.id);
+
     } else {
+
       setChats((prev) =>
         prev.map((chat) =>
           chat.id === currentChatId
@@ -158,12 +215,21 @@ const sendMessage = async () => {
             : chat
         )
       );
+
     }
+
   } catch (error) {
+
     console.error(error);
-  } finally {
-    setIsThinking(false);
-  }
+
+  } 
+    finally {
+
+      if (firstChunk) {
+        setIsThinking(false);
+      }
+
+    }
 };
 
 

@@ -2,7 +2,6 @@ import re
 
 
 class ContextCompressor:
-
     def compress(self, results):
 
         if not results:
@@ -13,12 +12,10 @@ class ContextCompressor:
 
         for result in results:
 
-            file_id, score, chunk, file_name, page = result
+            chunk_id, file_id, score, chunk, file_name, page, *extra = result
 
-            # Clean whitespace
             chunk = re.sub(r"\s+", " ", chunk).strip()
 
-            # Remove exact duplicate chunks
             normalized = chunk.lower()
 
             if normalized in seen:
@@ -28,11 +25,13 @@ class ContextCompressor:
 
             compressed.append(
                 (
+                    chunk_id,
                     file_id,
                     score,
                     chunk,
                     file_name,
-                    page
+                    page,
+                    *extra
                 )
             )
 

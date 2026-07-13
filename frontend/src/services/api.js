@@ -32,6 +32,50 @@ export const chatWithAI = (question, history, mode) =>
     mode,
   });
 
+export const streamChatWithAI = async (
+  question,
+  history,
+  mode,
+  onChunk
+) => {
+
+  const response = await fetch(
+    "http://127.0.0.1:8000/chat/chat-stream",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        question,
+        history,
+        mode,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Streaming failed");
+  }
+
+  const reader = response.body.getReader();
+
+  const decoder = new TextDecoder();
+
+  while (true) {
+
+    const { done, value } = await reader.read();
+
+    if (done) break;
+
+    onChunk(
+      decoder.decode(value)
+    );
+
+  }
+
+};
+
 export const checkSetup = () => api.get("/setup/check");
 
 export const installEngine = () =>

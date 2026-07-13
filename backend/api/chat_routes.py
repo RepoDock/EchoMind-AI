@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-
+from fastapi.responses import StreamingResponse
+from ai.chat import ask_llm, ask_llm_stream
 from ai.chat import ask_llm
 
 router = APIRouter()
@@ -30,4 +31,16 @@ def document_chat(request: DocumentChatRequest):
         history=request.history,
         mode=request.mode,
         file_id=request.file_id
+    )
+
+@router.post("/chat-stream")
+def chat_stream(request: ChatRequest):
+
+    return StreamingResponse(
+        ask_llm_stream(
+            question=request.question,
+            history=request.history,
+            mode=request.mode
+        ),
+        media_type="text/plain"
     )
