@@ -1,12 +1,12 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from ai.search import search_documents
+from ai.hybrid_search import HybridSearch
 from database.connection import cursor
 
 router = APIRouter()
 
-
+hybrid = HybridSearch()
 class SearchRequest(BaseModel):
     query: str
 
@@ -14,13 +14,16 @@ class SearchRequest(BaseModel):
 @router.post("/search")
 def ai_search(request: SearchRequest):
 
-    results = search_documents(request.query)
+    results = hybrid.search(
+        query=request.query,
+        top_k=20
+    )
 
     best_results = {}
 
     query = request.query.lower()
 
-    for file_id, score, chunk, file_name, page_number in results:
+    for _, file_id, score, chunk, file_name, page_number in results:
 
         cursor.execute(
             """

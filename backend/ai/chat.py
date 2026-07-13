@@ -18,9 +18,6 @@ from ai.config import (
 )
 from ai.prompts.prompt_selector import PromptSelector
 from ai.hallucination_guard import HallucinationGuard
-from ai.search import (
-    search_document
-)
 from ai.intent_classifier import IntentClassifier
 from ai.hybrid_search import HybridSearch
 
@@ -101,11 +98,11 @@ def ask_llm(
 
             search_start = time.perf_counter()
 
-            results = search_document(
-                file_id=file_id,
+            results = hybrid.search(
                 query=question,
                 history=history,
-                top_k=top_k
+                top_k=top_k,
+                file_id=file_id
             )
 
             search_time = time.perf_counter() - search_start
@@ -113,7 +110,7 @@ def ask_llm(
 
                 print("=" * 60)
 
-                for _, score, chunk, file_name, page_number in results:
+                for _, _, score, chunk, file_name, page_number in results:
 
                     print(page_number, score)
                     print(chunk[:250])
@@ -272,11 +269,11 @@ def ask_llm_stream(
 
                 search_start = time.perf_counter()
 
-                results = search_document(
-                    file_id=file_id,
+                results = hybrid.search(
                     query=question,
                     history=history,
-                    top_k=top_k
+                    top_k=top_k,
+                    file_id=file_id
                 )
 
                 search_time = time.perf_counter() - search_start
@@ -284,7 +281,7 @@ def ask_llm_stream(
 
                     print("=" * 60)
 
-                    for _, score, chunk, file_name, page_number in results:
+                    for _, _, score, chunk, file_name, page_number in results:
 
                         print(page_number, score)
                         print(chunk[:250])

@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 from ai.chat import ask_llm, ask_llm_stream
-from ai.chat import ask_llm
 
 router = APIRouter()
 

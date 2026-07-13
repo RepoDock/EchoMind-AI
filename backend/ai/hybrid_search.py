@@ -96,7 +96,8 @@ class HybridSearch:
         self,
         query,
         history=None,
-        top_k=20
+        top_k=20,
+        file_id=None
     ):
 
         queries = rewrite_query(
@@ -182,20 +183,42 @@ class HybridSearch:
 
         for chunk_id, score in ranked:
 
-            cursor.execute(
-                """
-                SELECT
-                    dc.file_id,
-                    dc.page_number,
-                    dc.chunk_text,
-                    f.name
-                FROM document_chunks dc
-                JOIN files f
-                    ON dc.file_id = f.id
-                WHERE dc.id = ?
-                """,
-                (chunk_id,)
-            )
+            if file_id is None:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        dc.file_id,
+                        dc.page_number,
+                        dc.chunk_text,
+                        f.name
+                    FROM document_chunks dc
+                    JOIN files f
+                        ON dc.file_id = f.id
+                    WHERE dc.id = ?
+                    """,
+                    (chunk_id,)
+                )
+
+            else:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        dc.file_id,
+                        dc.page_number,
+                        dc.chunk_text,
+                        f.name
+                    FROM document_chunks dc
+                    JOIN files f
+                        ON dc.file_id = f.id
+                    WHERE
+                        dc.id = ?
+                    AND
+                        dc.file_id = ?
+                    """,
+                    (chunk_id, file_id)
+                )
 
             row = cursor.fetchone()
 
