@@ -43,7 +43,7 @@ def check_setup():
         models = response.json()["models"]
 
         installed = any(
-            m["name"].startswith("llama3.2:3b")
+            m["name"].startswith("qwen2.5:7b")
             for m in models
         )
 
@@ -70,7 +70,7 @@ def download_model():
         subprocess.run([
             "ollama",
             "pull",
-            "llama3.2:3b"
+            "qwen2.5:7b"
         ])
 
     threading.Thread(
@@ -93,7 +93,7 @@ def model_status():
     models = response.json()["models"]
 
     installed = any(
-        m["name"].startswith("llama3.2:3b")
+        m["name"].startswith("qwen2.5:7b")
         for m in models
     )
 
@@ -146,7 +146,7 @@ def install_engine():
         subprocess.run([
             "ollama",
             "pull",
-            "llama3.2:3b"
+            "qwen2.5:7b"
         ])
 
     threading.Thread(

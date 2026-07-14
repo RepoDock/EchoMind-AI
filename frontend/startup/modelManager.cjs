@@ -2,9 +2,9 @@ const http = require("http");
 const { exec, spawn } = require("child_process");
 const { getOllamaExecutable } = require("./checkOllama.cjs");
 const REQUIRED_MODELS = [
-    "llama3.2:3b"
+    "qwen2.5:7b",
+    "nomic-embed-text"
 ];
-
 function getInstalledModels() {
 
     return new Promise((resolve, reject) => {
