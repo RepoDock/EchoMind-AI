@@ -1,59 +1,44 @@
 # AXON
 
-**Your laptop remembers everything, so you don't have to.**
+> **Offline AI Assistant powered by On-Device AI**
 
-AXON is an offline AI desktop assistant that helps you instantly search, understand, and chat with your documents. Instead of manually opening files one by one, simply ask a question in natural language and AXON will find the most relevant information for you.
+Your laptop remembers everything, so you don't have to.
 
----
-
-## Features
-
-- 🔍 AI-powered document search
-- 💬 Chat with PDFs, DOCX, PPTX, TXT, and more
-- 🧠 AI-generated summaries
-- 📂 Scan entire folders automatically
-- 🔒 100% Offline – your files never leave your laptop
-- ⚡ Fast semantic search powered by local AI
+AXON is an AI-powered desktop assistant that runs **completely offline**. It lets users chat with AI, search documents by their contents instead of filenames, perform research across local files, and interact with PDFs—all without sending data to the cloud.
 
 ---
 
-## Example Queries
+## ✨ Features
 
-- "Where is the networking assignment?"
-- "Show me all documents related to Machine Learning."
-- "Find the PDF where cache memory is explained."
-- "Which document contains information about IPv6?"
-
----
-
-## Supported File Types
-
-- PDF
-- DOCX
-- PPTX
-- TXT
-
-More formats will be added in future updates.
+- 🤖 Offline AI Chat powered by Ollama
+- 🔍 Content-Based File Search (No filename required)
+- 📚 Research across local documents
+- 📄 Chat with PDFs, DOCX, PPTX & TXT
+- 🧠 AI-powered Document Understanding
+- ⚡ Streaming Responses
+- 📂 Automatic Folder Indexing
+- 🔒 100% Local Processing
+- 🖥️ One-Click Installer
+- 🧩 Multiple Local LLM Support
 
 ---
 
-## Why AXON?
+## 🚀 Why AXON?
 
-Unlike cloud-based AI tools, AXON processes everything locally on your computer.
+Traditional search depends on filenames.
 
-Your documents remain private while still giving you powerful AI search and document chat capabilities.
+AXON searches **inside your documents**, allowing you to find files even when you've forgotten their names.
+
+Everything runs locally, ensuring:
+
+- Complete Privacy
+- No Internet Required
+- No API Costs
+- Fast Response Time
 
 ---
 
-## Download
-
-Latest Release:
-
-https://tinyurl.com/downloadaxon
-
----
-
-## Tech Stack
+## 🛠 Tech Stack
 
 - Electron
 - React
@@ -64,14 +49,9 @@ https://tinyurl.com/downloadaxon
 
 ---
 
-## Status
-
-Current Version: **Alpha**
-
-This project is actively under development. Feedback, bug reports, and feature suggestions are always welcome.
 
 ---
 
-## License
+## 📄 License
 
 MIT License
